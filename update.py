@@ -177,7 +177,7 @@ def box(eid):
                     return int(float(x))
                 except Exception:  # noqa: BLE001
                     return 0
-            row = {'name': a['athlete']['displayName'], 'min': num('MIN'), 'st': 1 if a.get('starter') else 0,
+            row = {'name': a['athlete']['displayName'], 'pos': ((a['athlete'].get('position') or {}).get('abbreviation') or ''), 'min': num('MIN'), 'st': 1 if a.get('starter') else 0,
                    'pts': num('PTS'), 'reb': num('REB'), 'ast': num('AST'), 'thr': num('3PT'), 'stl': num('STL'), 'blk': num('BLK')}
             if row['min'] == 0 and row['pts'] == 0 and row['reb'] == 0 and row['ast'] == 0:
                 continue
@@ -263,13 +263,16 @@ def update_results(results, now):
     refetched = 0
     for dd in sorted(results):
         for g in list(results[dd].get('games', [])):
-            if (g.get('team') and 'ttov' in (g['team'].get('away') or {})) or not g.get('id') or refetched >= 250:
+            first = next((p for sd in ('away', 'home') for p in (g.get('players') or {}).get(sd, [])), {})
+            if (g.get('team') and 'ttov' in (g['team'].get('away') or {}) and 'pos' in first) or not g.get('id') or refetched >= 250:
                 continue
             try:
                 _, g2 = box(g['id'])
                 if g2.get('team'):
                     g['team'] = g2['team']
-                    refetched += 1
+                if g2['players']['away'] or g2['players']['home']:
+                    g['players'] = g2['players']
+                refetched += 1
                 time.sleep(0.2)
             except Exception as e:  # noqa: BLE001
                 print('team totals failed', g.get('id'), e)
@@ -294,6 +297,8 @@ def season_logs(results):
                     for s in ('min', 'pts', 'reb', 'ast', 'stl', 'blk', 'thr'):
                         a[s] += p.get(s) or 0
                     a['team'] = g[sd]
+                    if p.get('pos'):
+                        a['pos'] = p['pos']
     return agg
 
 
@@ -322,7 +327,7 @@ def player_table(results):
             if team not in TEAMS:
                 continue
             gp = int(vals.get('gamesPlayed') or 0)
-            rows[nm(name) + '|' + team] = {'team': team, 'name': name, 'gp': gp, 'gs': lg.get('gs') if lg else None,
+            rows[nm(name) + '|' + team] = {'team': team, 'name': name, 'pos': ((ath.get('position') or {}).get('abbreviation') or lg.get('pos') or ''), 'gp': gp, 'gs': lg.get('gs') if lg else None,
                               'min': rd(vals.get('avgMinutes')), 'pts': rd(vals.get('avgPoints')), 'reb': rd(vals.get('avgRebounds')),
                               'ast': rd(vals.get('avgAssists')), 'stl': rd(vals.get('avgSteals')), 'blk': rd(vals.get('avgBlocks')),
                               'thr': rd(vals.get('avgThreePointFieldGoalsMade'))}
@@ -336,7 +341,7 @@ def player_table(results):
     if not rows:
         for k, a in logs.items():
             n = a['gp'] or 1
-            rows[k] = {'team': a['team'], 'name': a['name'], 'gp': a['gp'], 'gs': a['gs'],
+            rows[k] = {'team': a['team'], 'name': a['name'], 'pos': a.get('pos', ''), 'gp': a['gp'], 'gs': a['gs'],
                        **{s: rd(a[s] / n) for s in ('min', 'pts', 'reb', 'ast', 'stl', 'blk', 'thr')}}
     # if box scores show a later team (trade), trust them
     for k, r in rows.items():

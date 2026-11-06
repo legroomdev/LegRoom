@@ -642,6 +642,41 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       default: return 1;
     }
   }
+  // ---- position matchups: what each defence allows to guards, forwards and centres ----
+  const posGroup = pos => { pos = String(pos || '').toUpperCase(); if (!pos) return null; if (pos.includes('C')) return 'C'; if (pos[0] === 'G' || pos === 'PG' || pos === 'SG') return 'G'; return 'F'; };
+  const POSNAME = { G: 'guards', F: 'forwards', C: 'centres' };
+  let DVP = null;
+  function buildDvp() {
+    const allow = {}, games = {}, lg = { G: {}, F: {}, C: {} }; let teamGames = 0, withPos = 0;
+    Object.values(RESULTS).forEach(r => ((r && r.games) || []).forEach(g => {
+      const P = g.players || {};
+      if (![...(P.away || []), ...(P.home || [])].some(p => p.pos)) return;
+      withPos++;
+      [['away', 'home'], ['home', 'away']].forEach(([sd, op]) => {
+        const def = g[op], a = allow[def] = allow[def] || { G: {}, F: {}, C: {} };
+        games[def] = (games[def] || 0) + 1; teamGames++;
+        (P[sd] || []).forEach(p => { const gr = posGroup(p.pos); if (!gr) return; ['pts', 'reb', 'ast', 'thr'].forEach(k => { a[gr][k] = (a[gr][k] || 0) + (+p[k] || 0); lg[gr][k] = (lg[gr][k] || 0) + (+p[k] || 0); }); });
+      });
+    }));
+    if (withPos < 40 || !teamGames) { DVP = {}; return; }
+    DVP = { allow, games, lg, teamGames };
+  }
+  // Ratio of what this defence gives up to his position against the league, per game and per possession, shrunk and capped at ±10%.
+  function dvpRatio(opp, gr, k) {
+    if (!DVP) buildDvp();
+    if (!DVP || !DVP.allow || !DVP.allow[opp] || !gr) return null;
+    const g = DVP.games[opp] || 0, lgPer = (DVP.lg[gr][k] || 0) / DVP.teamGames; if (!g || !lgPer) return null;
+    const pace = TEAMDEF[opp] && TEAMDEF[opp].pace && DEFLG ? TEAMDEF[opp].pace / DEFLG.pace : 1;
+    const raw = ((DVP.allow[opp][gr][k] || 0) / g) / pace / lgPer, w = g / (g + 15);
+    return Math.max(.9, Math.min(1.1, 1 + w * (raw - 1)));
+  }
+  function dvpFactor(opp, stat, gr) {
+    const f = k => dvpRatio(opp, gr, k);
+    if (['points', 'rebounds', 'assists', 'threes'].includes(stat)) { const k = { points: 'pts', rebounds: 'reb', assists: 'ast', threes: 'thr' }[stat], v = f(k); return v == null ? null : (stat === 'rebounds' ? v * missFactor(opp) : v); }
+    const P = f('pts'), R = f('reb'), A = f('ast'); if (P == null || R == null || A == null) return null;
+    const Rm = R * missFactor(opp);
+    return stat === 'pra' ? P * .65 + Rm * .2 + A * .15 : stat === 'pr' ? P * .75 + Rm * .25 : stat === 'pa' ? P * .8 + A * .2 : stat === 'ra' ? Rm * .6 + A * .4 : null;
+  }
   const teamPace = a => TEAMDEF[a] && TEAMDEF[a].pace ? TEAMDEF[a].pace : null;
   const shrinkW = a => { const g = (TEAMDEF[a] || {}).g || 0; return g / (g + 10); };
   // Expected points per 100 possessions for `off` against `def`, pulled toward league average early in the season.
@@ -660,6 +695,15 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     return Math.max(.95, Math.min(1.05, 1 + shrinkW(opp) * .6 * (ratio - 1)));
   }
   const ordn = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  // "Hawks allow the 3rd-most rebounds to centres"
+  function posText(opp, stat, gr) {
+    if (!gr) return '';
+    const ts = Object.keys((DVP && DVP.allow) || {}), v = x => dvpFactor(x, stat, gr);
+    const vals = ts.map(x => [x, v(x)]).filter(x => x[1] != null).sort((a, b) => b[1] - a[1]);
+    const i = vals.findIndex(x => x[0] === opp); if (i < 0) return '';
+    const n = vals.length, rk = i + 1, what = { points: 'points', rebounds: 'rebounds', assists: 'assists', threes: 'threes', pra: 'points, rebounds and assists', pr: 'points and rebounds', pa: 'points and assists', ra: 'rebounds and assists' }[stat] || 'production';
+    return tname(opp) + (rk <= n / 2 ? ' allow the ' + (rk === 1 ? '' : ordn(rk) + '-') + 'most ' : ' allow the ' + (rk === n ? '' : ordn(n + 1 - rk) + '-') + 'fewest ') + what + ' to ' + POSNAME[gr];
+  }
   function defText(opp, stat) {
     const k = DEFKEY[stat], rk = k && DEFRANK[k] && DEFRANK[k][opp]; if (!rk) return '';
     const n = Object.keys(DEFRANK[k]).length, what = { drtg: 'points per 100 possessions', opp_reb: 'rebounds', opp_ast: 'assists', opp_thr: 'threes' }[k];
@@ -744,14 +788,20 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
         const fat = fatigueOf(home ? g.home : g.away, g);
         if ((fat.tif || ownB2B || fat.ot) && ['rebounds', 'assists', 'pra', 'pr', 'pa', 'ra'].includes(leg.stat)) m *= .985;
         if (ownSpot === 'tank' || ownSpot === 'rest') m *= 1 - S.motivePen / 100;
-        const df = defFactor(home ? g.away : g.home, leg.stat);
+        const opp = home ? g.away : g.home, gr = posGroup(leg.pos), dv = gr ? dvpFactor(opp, leg.stat, gr) : null;
+        // Position matchup when we know his position; otherwise the opponent's whole-team defence.
+        const df = dv != null ? dv * .7 + defFactor(opp, leg.stat) * .3 : defFactor(opp, leg.stat);
         m *= df;
-        if (df >= 1.025) flags.push(['Soft defence', over ? 'good' : 'warn']); else if (df <= .975) flags.push(['Tough defence', over ? 'warn' : 'good']);
+        const vsPos = dv != null ? ' vs ' + POSNAME[gr] : '';
+        if (df >= 1.025) flags.push(['Soft defence' + vsPos, over ? 'good' : 'warn']); else if (df <= .975) flags.push(['Tough defence' + vsPos, over ? 'warn' : 'good']);
         const k = Math.floor(L) + 1;
         const cv = leg.cv ? leg.cv : (CV[leg.stat] || .3) * (leg.role === 'bench' ? 1.2 : 1);
         const usePois = (POISSON[leg.stat] && !(leg.cv && m >= 2)) || m < 2;
         let pOver = usePois ? poissonGE(k, m) : 1 - Phi((k - 0.5 - m) / Math.max(leg.cv ? .8 : 1.5, cv * m));
         if (leg.role === 'bench' && (POISSON[leg.stat] || m < 4)) pOver = .5 + (pOver - .5) * .9;
+        // His own spread of results this season, rescaled to tonight's projection: keeps the lopsided shape of real scoring nights.
+        const emp = leg.proj0 != null ? ownSpread(leg.player, leg.stat, m, k) : null;
+        if (emp) { const w = Math.min(.45, emp.n / (emp.n + 14)); pOver = (1 - w) * pOver + w * emp.p; }
         p = over ? pOver : 1 - pOver; proj = m;
         basis = 'Projects ' + m.toFixed(1) + ' ' + (STAT[leg.stat] || STAT.points)[1];
       }
@@ -1173,7 +1223,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
             const proj0 = avg * ratio + usageAdd;
             const cvs = playerCV(p.name, stat);
             const tried = LADDER[stat].map(x => {
-              const leg = { kind: 'leg', id: 'a_' + g.id + '_' + side + '_' + nm(p.name) + '_' + stat + '_' + x, gameId: g.id, auto: true, market: STAT_MS[stat], type: 'player', period: 'ft', team: side, player: p.name, stat, side: 'over', line: String(x - 0.5), avg: String(Math.round(avg * 10) / 10), cur: Math.round(cur * 10) / 10, last: bl.last != null ? Math.round(bl.last * 10) / 10 : null, lastW: bl.w || 0, gp: p.gp, status, role, mins, projMin: Math.round(pm * 10) / 10, minWhy: minWhy[p.name] || [], proj0, usageAdd: Math.round(usageAdd * 10) / 10, usage: usageAdd >= .5, usageFrom: outStars, odds: '' };
+              const leg = { kind: 'leg', id: 'a_' + g.id + '_' + side + '_' + nm(p.name) + '_' + stat + '_' + x, gameId: g.id, auto: true, market: STAT_MS[stat], type: 'player', period: 'ft', team: side, player: p.name, pos: p.pos || ((LOGS[nm(p.name)] || []).find(r => r.pos) || {}).pos || '', stat, side: 'over', line: String(x - 0.5), avg: String(Math.round(avg * 10) / 10), cur: Math.round(cur * 10) / 10, last: bl.last != null ? Math.round(bl.last * 10) / 10 : null, lastW: bl.w || 0, gp: p.gp, status, role, mins, projMin: Math.round(pm * 10) / 10, minWhy: minWhy[p.name] || [], proj0, usageAdd: Math.round(usageAdd * 10) / 10, usage: usageAdd >= .5, usageFrom: outStars, odds: '' };
               if (cvs) Object.assign(leg, cvs);
               const hr = recentHits(p.name, stat, x - 0.5); if (hr) { leg.hits = String(hr[0]); leg.of = String(hr[1]); }
               const r = rate(leg); return { leg, p: r && r.p };
@@ -1209,8 +1259,8 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   const rowOf = p => ({ pts: +p.pts || 0, reb: +p.reb || 0, ast: +p.ast || 0, thr: +p.thr || 0, stl: +p.stl || 0, blk: +p.blk || 0 });
   let LOGS = {};
   function buildLogs() {
-    LOGS = {}; FATIGUE = {};
-    Object.keys(RESULTS).sort().reverse().forEach(d => ((RESULTS[d] || {}).games || []).forEach(g => ['away', 'home'].forEach(sd => ((g.players || {})[sd] || []).forEach(p => { const k = nm(p.name); (LOGS[k] = LOGS[k] || []).push(Object.assign({ date: d, min: p.min != null ? +p.min : null, st: p.st != null ? +p.st : null, team: g[sd] }, rowOf(p))); }))));
+    LOGS = {}; FATIGUE = {}; DVP = null;
+    Object.keys(RESULTS).sort().reverse().forEach(d => ((RESULTS[d] || {}).games || []).forEach(g => ['away', 'home'].forEach(sd => ((g.players || {})[sd] || []).forEach(p => { const k = nm(p.name); (LOGS[k] = LOGS[k] || []).push(Object.assign({ date: d, min: p.min != null ? +p.min : null, st: p.st != null ? +p.st : null, team: g[sd], pos: p.pos || '' }, rowOf(p))); }))));
   }
   // Recent role: minutes and starts over his last five games, from the box scores.
   function recentRole(name) {
@@ -1231,6 +1281,16 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     const sd = Math.sqrt(v.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (n - 1)), cvP = sd / mean, cvD = CV[stat] || .4;
     const cv = Math.max(cvD * .6, Math.min(cvD * 1.6, (n * cvP + 6 * cvD) / (n + 6)));
     return { cv, cvN: n, cvTag: cvP < cvD * .75 ? 'steady' : cvP > cvD * 1.3 ? 'streaky' : '' };
+  }
+  function ownSpread(name, stat, proj, k) {
+    if (!STATKEY[stat] && !['pra', 'pr', 'pa', 'ra'].includes(stat)) return null;
+    const log = (LOGS[nm(name)] || []).filter(r => r.date < today && (r.min == null || r.min >= 8));
+    if (log.length < 6) return null;
+    const v = log.map(r => statOf(r, stat)), n = v.length, mean = v.reduce((a, b) => a + b, 0) / n;
+    if (mean < 1) return null;
+    const x = v.map(y => y * proj / mean), mx = proj, sd = Math.sqrt(x.reduce((a, y) => a + (y - mx) * (y - mx), 0) / (n - 1));
+    const h = Math.max(.75, .35 * sd);
+    return { p: x.reduce((a, y) => a + (1 - Phi((k - .5 - y) / h)), 0) / n, n };
   }
   function recentHits(name, stat, line) {
     if (!STATKEY[stat] && !['pra', 'pr', 'pa', 'ra'].includes(stat)) return null;
@@ -1612,9 +1672,9 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       'Soft defence': g ? defText(l.team === 'home' ? g.away : g.home, l.stat) : '',
       'Tough defence': g ? defText(l.team === 'home' ? g.away : g.home, l.stat) : ''
     };
-    (r.flags || []).forEach(f => { if (say[f[0]]) bits.push(say[f[0]]); });
+    (r.flags || []).forEach(f => { if (say[f[0]]) bits.push(say[f[0]]); else if (/^(Soft|Tough) defence vs /.test(f[0]) && g) { const tx = posText(l.team === 'home' ? g.away : g.home, l.stat, posGroup(l.pos)); if (tx) bits.push(tx); } });
     if (l.type === 'player' && g && ['rebounds', 'ra', 'pr', 'pra'].includes(l.stat)) { const opp = l.team === 'home' ? g.away : g.home, mf = missFactor(opp); if (mf >= 1.02) bits.push(tname(opp) + ' miss a lot of shots, so more rebounds to go around'); else if (mf <= .98) bits.push(tname(opp) + ' rarely miss, so fewer rebounds to go around'); }
-    if (l.type === 'player' && g && !(r.flags || []).some(f => f[0] === 'Soft defence' || f[0] === 'Tough defence') && DEFRANK.drtg) { const t = defText(l.team === 'home' ? g.away : g.home, l.stat); if (t) bits.push(t + ', about average'); }
+    if (l.type === 'player' && g && !(r.flags || []).some(f => /^(Soft|Tough) defence/.test(f[0])) && DEFRANK.drtg) { const t = defText(l.team === 'home' ? g.away : g.home, l.stat); if (t) bits.push(t + ', about average'); }
     const t = bits.join('; ');
     return t ? t.charAt(0).toUpperCase() + t.slice(1) + '.' : '';
   }
