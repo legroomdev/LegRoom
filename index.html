@@ -86,10 +86,22 @@ details.form form { margin-top: 12px; }
 .gtop { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 .teams { font-family: var(--display); font-weight: 800; font-size: 1.35rem; text-transform: uppercase; }
 .teams span { color: var(--muted); font-weight: 700; padding: 0 4px; }
+.teams { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.teams span.at { padding: 0 2px; }
+.vs { display: inline-flex; align-items: center; justify-content: center; padding: 3px 9px 3px 7px; margin: 0 3px; background: var(--ink); color: var(--surface); font-family: var(--display); font-style: italic; font-weight: 900; font-size: .72rem; letter-spacing: .06em; line-height: 1.1; clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%); box-shadow: inset 3px 0 0 var(--bad); vertical-align: 1px; text-transform: uppercase; }
+.teams .vs { font-size: .8rem; padding: 4px 11px 4px 9px; }
+.label .vs, .sbgame .vs { font-size: .62rem; padding: 2px 8px 2px 6px; margin: 0 5px 0 1px; }
+.tbadge { display: inline-flex; align-items: center; justify-content: center; min-width: 2.6em; padding: 2px 5px 3px; border-radius: 6px; background: var(--t1); color: var(--tx); box-shadow: inset 0 -3px 0 var(--t2), 0 0 0 1px color-mix(in srgb, var(--line) 70%, transparent); font-family: var(--display); font-weight: 800; font-size: .72rem; letter-spacing: .04em; line-height: 1.2; text-transform: uppercase; vertical-align: 1px; font-style: normal; }
+.teams .tbadge { font-size: .78rem; padding: 3px 6px 4px; color: var(--tx); }
+.label .tbadge, .sbgame .tbadge { font-size: .68rem; margin-right: 6px; letter-spacing: .03em; align-self: center; flex: none; height: auto; padding: 1px 5px 2px; }
 .live { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: .78rem; font-weight: 800; letter-spacing: .08em; color: var(--bad); }
 .live b { font-family: var(--display); font-size: 1.15rem; letter-spacing: .01em; color: var(--ink); font-variant-numeric: tabular-nums; }
 .live span:last-child:not(.dotlive) { color: var(--muted); font-weight: 600; letter-spacing: 0; }
 .live.final { color: var(--muted); }
+.live.dummy b { color: var(--muted); }
+.live .ph { display: inline-block; min-width: 1.6em; height: .9em; border-radius: 4px; background: color-mix(in srgb, var(--muted) 30%, transparent); vertical-align: -1px; margin: 0 2px; }
+@media (prefers-reduced-motion: no-preference) { .live .ph { animation: phfade 1.6s ease-in-out infinite; } }
+@keyframes phfade { 50% { opacity: .45; } }
 .livebar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; font-size: .85rem; color: var(--muted); margin: 0 0 12px; }
 .livebar #liveMsg { flex: 1 1 180px; min-width: 0; }
 .livebar.off .dotlive { background: var(--muted); animation: none; }
@@ -154,14 +166,18 @@ details.form form { margin-top: 12px; }
 .sugg li span.why { display: block; color: var(--muted); font-size: .82rem; line-height: 1.4; }
 .sugg li b { font-variant-numeric: tabular-nums; }
 .tier { font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 1.25rem; letter-spacing: .02em; }
-.stepper { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.stepper .btn { width: 46px; height: 46px; padding: 0; font-size: 1.4rem; font-weight: 700; line-height: 1; }
-.stepper input { width: 72px; text-align: center; font-family: var(--display); font-size: 1.5rem; font-weight: 800; padding: 6px; }
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper .btn { flex: 1 1 0; min-width: 0; height: 46px; padding: 0 2px; font-family: var(--display); font-size: 1.1rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.stepper .btn.sm { font-size: .95rem; color: var(--muted); }
+.stepper .btn:disabled { opacity: .35; }
+.stepper input { flex: 0 0 60px; width: 60px; text-align: center; font-family: var(--display); font-size: 1.5rem; font-weight: 800; padding: 6px 2px; }
+.steprange { display: block; margin-top: 6px; }
 .seg3 { grid-template-columns: repeat(3, 1fr); }
 .seg3 button { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
 .seg3 button small { font-weight: 500; font-size: .72rem; }
 .tierbtns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.tb, .tbx { font-family: var(--display); font-weight: 800; font-size: 1.15rem; text-transform: uppercase; letter-spacing: .02em; padding: 14px 6px; border-width: 2px; }
+.tb, .tbx { font-family: var(--display); font-weight: 800; font-size: 1.15rem; text-transform: uppercase; letter-spacing: .02em; padding: 12px 6px 10px; border-width: 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; line-height: 1.1; }
+.tb .rec, .tbx .rec { font-family: var(--body, inherit); font-weight: 600; font-size: .68rem; text-transform: none; letter-spacing: 0; line-height: 1.25; opacity: .85; }
 .tbx.safe { border-color: var(--good); color: var(--good); } .tbx.med { border-color: var(--warn); color: var(--warn); } .tbx.high { border-color: var(--bad); color: var(--bad); }
 .tbx[aria-pressed="true"].safe { background: var(--good); color: var(--surface); } .tbx[aria-pressed="true"].med { background: var(--warn); color: var(--surface); } .tbx[aria-pressed="true"].high { background: var(--bad); color: var(--surface); }
 .panel.best { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
@@ -236,18 +252,21 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     </div>
     <div class="field"><span class="label" id="legsLblB">Number of legs</span>
       <div class="stepper" role="group" aria-labelledby="legsLblB">
-        <button type="button" class="btn" data-step="-1" aria-label="Fewer legs">−</button>
-        <input type="number" class="legsN" id="legsNB" min="2" max="12" inputmode="numeric" aria-label="Number of legs">
-        <button type="button" class="btn" data-step="1" aria-label="More legs">+</button>
-        <span class="help">2 to 12 legs</span>
-      </div></div>
+        <button type="button" class="btn sm" data-step="-10" aria-label="10 fewer legs">−10</button>
+        <button type="button" class="btn sm" data-step="-5" aria-label="5 fewer legs">−5</button>
+        <button type="button" class="btn" data-step="-1" aria-label="1 fewer leg">−1</button>
+        <input type="number" class="legsN" id="legsNB" min="2" max="20" inputmode="numeric" aria-label="Number of legs">
+        <button type="button" class="btn" data-step="1" aria-label="1 more leg">+1</button>
+        <button type="button" class="btn sm" data-step="5" aria-label="5 more legs">+5</button>
+        <button type="button" class="btn sm" data-step="10" aria-label="10 more legs">+10</button>
+      </div><span class="help steprange">2 to 20 legs, the most Sportsbet allows</span></div>
     <div class="field"><label class="label" for="mustB">Must include (optional)</label>
       <div class="mustrow"><input type="text" class="mustP" id="mustB" list="allPlayers" placeholder="Player name, e.g. Curry" autocomplete="off"><button class="btn small" type="button" data-clearmust>Clear</button></div></div>
     <span class="label">Risk level</span>
     <div class="tierbtns">
-      <button class="btn tb2 tbx safe" type="button" data-btier="safe">Safe</button>
-      <button class="btn tb2 tbx med" type="button" data-btier="med">Medium</button>
-      <button class="btn tb2 tbx high" type="button" data-btier="high">High risk</button>
+      <button class="btn tb2 tbx safe" type="button" data-btier="safe"><span>Safe</span><small class="rec">Recommended<br>3–8 legs</small></button>
+      <button class="btn tb2 tbx med" type="button" data-btier="med"><span>Medium</span><small class="rec">Recommended<br>3–6 legs</small></button>
+      <button class="btn tb2 tbx high" type="button" data-btier="high"><span>High risk</span><small class="rec">Recommended<br>3–5 legs</small></button>
     </div>
     <div class="games" id="best"></div>
   </section>
@@ -355,19 +374,22 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     </div>
     <div class="field"><span class="label" id="legsLblS">Number of legs</span>
       <div class="stepper" role="group" aria-labelledby="legsLblS">
-        <button type="button" class="btn" data-step="-1" aria-label="Fewer legs">−</button>
-        <input type="number" class="legsN" id="legsNS" min="2" max="12" inputmode="numeric" aria-label="Number of legs">
-        <button type="button" class="btn" data-step="1" aria-label="More legs">+</button>
-        <span class="help">2 to 12 legs</span>
-      </div></div>
+        <button type="button" class="btn sm" data-step="-10" aria-label="10 fewer legs">−10</button>
+        <button type="button" class="btn sm" data-step="-5" aria-label="5 fewer legs">−5</button>
+        <button type="button" class="btn" data-step="-1" aria-label="1 fewer leg">−1</button>
+        <input type="number" class="legsN" id="legsNS" min="2" max="20" inputmode="numeric" aria-label="Number of legs">
+        <button type="button" class="btn" data-step="1" aria-label="1 more leg">+1</button>
+        <button type="button" class="btn sm" data-step="5" aria-label="5 more legs">+5</button>
+        <button type="button" class="btn sm" data-step="10" aria-label="10 more legs">+10</button>
+      </div><span class="help steprange">2 to 20 legs, the most Sportsbet allows</span></div>
     <div class="field"><label class="label" for="mustS">Must include (optional)</label>
       <div class="mustrow"><input type="text" class="mustP" id="mustS" list="allPlayers" placeholder="Player name, e.g. Curry" autocomplete="off"><button class="btn small" type="button" data-clearmust>Clear</button></div></div>
     <datalist id="allPlayers"></datalist>
     <span class="label">Risk level</span>
     <div class="tierbtns">
-      <button class="btn tb safe" type="button" data-tier="safe">Safe</button>
-      <button class="btn tb med" type="button" data-tier="med">Medium</button>
-      <button class="btn tb high" type="button" data-tier="high">High risk</button>
+      <button class="btn tb safe" type="button" data-tier="safe"><span>Safe</span><small class="rec">Recommended<br>3–8 legs</small></button>
+      <button class="btn tb med" type="button" data-tier="med"><span>Medium</span><small class="rec">Recommended<br>3–6 legs</small></button>
+      <button class="btn tb high" type="button" data-tier="high"><span>High risk</span><small class="rec">Recommended<br>3–5 legs</small></button>
     </div>
     <div class="games" id="sugs"></div>
   </section>
@@ -381,6 +403,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     <p>Chances are estimates from the numbers you enter, not guarantees. Every extra leg makes a multi less likely to land.</p>
     <p class="help" id="dataHealth"></p>
     <p>Only bet what you've set aside to lose. Gambling Help Online, free and 24/7: <strong>1800 858 858</strong> or gamblinghelponline.org.au</p>
+    <p><strong>18+ only.</strong> Every percentage here is an estimate, not a guarantee or financial advice. Leg Room is not affiliated with the NBA, ESPN or Sportsbet.</p>
   </footer>
 </div>
 
@@ -407,6 +430,15 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   ];
   const ALIAS = { sixers: 'PHI', blazers: 'POR', cavs: 'CLE', mavs: 'DAL', wolves: 'MIN', okc: 'OKC', 'golden state': 'GSW', 'new york': 'NYK', 'los angeles lakers': 'LAL', 'los angeles clippers': 'LAC', 'l.a. lakers': 'LAL', 'l.a. clippers': 'LAC' };
   const tname = a => (TEAMS.find(t => t[0] === a) || [a, a])[1];
+  // Team colour badges: each club's main and trim colours with its abbreviation (no logos).
+  const TCOL = { ATL: ['#E03A3E', '#C1D32F'], BOS: ['#007A33', '#BA9653'], BKN: ['#000000', '#FFFFFF'], CHA: ['#1D1160', '#00788C'], CHI: ['#CE1141', '#000000'],
+    CLE: ['#860038', '#FDBB30'], DAL: ['#00538C', '#B8C4CA'], DEN: ['#0E2240', '#FEC524'], DET: ['#C8102E', '#1D42BA'], GSW: ['#1D428A', '#FFC72C'],
+    HOU: ['#CE1141', '#C4CED4'], IND: ['#002D62', '#FDBB30'], LAC: ['#C8102E', '#1D428A'], LAL: ['#552583', '#FDB927'], MEM: ['#5D76A9', '#12173F'],
+    MIA: ['#98002E', '#F9A01B'], MIL: ['#00471B', '#EEE1C6'], MIN: ['#0C2340', '#78BE20'], NOP: ['#0C2340', '#C8102E'], NYK: ['#006BB6', '#F58426'],
+    OKC: ['#007AC1', '#EF3B24'], ORL: ['#0077C0', '#C4CED4'], PHI: ['#006BB6', '#ED174C'], PHX: ['#1D1160', '#E56020'], POR: ['#E03A3E', '#000000'],
+    SAC: ['#5A2D81', '#63727A'], SAS: ['#000000', '#C4CED4'], TOR: ['#CE1141', '#000000'], UTA: ['#4B2D83', '#000000'], WAS: ['#002B5C', '#E31837'] };
+  const tb = a => { const c = TCOL[a]; if (!c) return ''; const h = c[0].slice(1), lum = (0.299 * parseInt(h.slice(0, 2), 16) + 0.587 * parseInt(h.slice(2, 4), 16) + 0.114 * parseInt(h.slice(4), 16)) / 255; return `<i class="tbadge" style="--t1:${c[0]};--t2:${c[1]};--tx:${lum > .62 ? '#111' : '#fff'}" aria-hidden="true">${esc(a)}</i>`; };
+  const matchupB = g => g ? tb(g.away) + esc(tname(g.away)) + ' <i class="vs" aria-label="versus">vs</i> ' + tb(g.home) + esc(tname(g.home)) : '';
   function matchTeam(s) {
     s = String(s || '').toLowerCase().trim(); if (!s) return null;
     for (const t of TEAMS) if (s.includes(t[1].toLowerCase())) return t[0];
@@ -578,7 +610,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     return { avg: cur * (1 - w) + last * w, last, w };
   }
 
-  // ---- team defence and pace (Basketball Reference, refreshed each morning) ----
+  // ---- team defence and pace (worked out from the season's box scores) ----
   let TEAMDEF = window.__LR_TEST_TEAMS || {}, DEFLG = null, DEFRANK = {};
   const perPace = (t, k) => (TEAMDEF[t][k] || 0) / (TEAMDEF[t].pace || 100);
   function buildDef() {
@@ -635,6 +667,23 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   }
 
   // ---- game environment ----
+  // ---- schedule fatigue: third game in four nights, overtime last game, altitude ----
+  let FATIGUE = {};
+  const dayN = d => Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5;
+  function fatigueOf(team, g) {
+    if (!g || !g.date || !team) return {};
+    const key = team + '|' + g.date + '|' + sched.length;
+    if (FATIGUE[key]) return FATIGUE[key];
+    const seen = {};
+    Object.keys(RESULTS).forEach(d => ((RESULTS[d] || {}).games || []).forEach(x => { if (x.away === team || x.home === team) seen[d] = { ot: !!(x.periods && x.periods['5']) }; }));
+    gamesList().forEach(x => { if ((x.away === team || x.home === team) && x.date && x.date < g.date && !seen[x.date]) seen[x.date] = { ot: false }; });
+    const now = dayN(g.date), prev = Object.keys(seen).filter(d => d < g.date).sort().reverse();
+    const inLast3 = prev.filter(d => now - dayN(d) <= 3).length;
+    const last = prev[0], gap = last ? now - dayN(last) : null;
+    const out = { tif: inLast3 >= 2, ot: !!(last && gap <= 2 && seen[last].ot), rest: gap != null ? gap - 1 : null };
+    FATIGUE[key] = out; return out;
+  }
+  const ALTITUDE = ['DEN', 'UTA'];
   function env(g) {
     const L = S.leaguePace;
     const pace = ((pos(g.paceA) || teamPace(g.away) || L) + (pos(g.paceH) || teamPace(g.home) || L)) / 2;
@@ -652,6 +701,10 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     }
     let adj = 0;
     if (g.b2bH) adj -= 1.5; if (g.b2bA) adj += 1.5;
+    const fH = fatigueOf(g.home, g), fA = fatigueOf(g.away, g);
+    if (fH.tif) adj -= 1; if (fA.tif) adj += 1;
+    if (fH.ot) adj -= .75; if (fA.ot) adj += .75;
+    if (ALTITUDE.includes(g.home)) adj += 1;
     const spotAdj = { tank: 2.5, rest: 4, must: -1, normal: 0 };
     adj -= spotAdj[g.spotH || 'normal'] || 0; adj += spotAdj[g.spotA || 'normal'] || 0;
     if (margin != null) margin += adj;
@@ -687,6 +740,9 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
           if (ownB2B) m *= 1 - S.b2bPen / 100;
           if (e.blowout) m *= leg.role === 'bench' ? 1 + S.blowoutPen / 200 : 1 - S.blowoutPen / 100;
         } else if (ownB2B) m *= 1 - S.b2bPen / 200;
+        // Tired legs hit rebounds and assists harder than scoring.
+        const fat = fatigueOf(home ? g.home : g.away, g);
+        if ((fat.tif || ownB2B || fat.ot) && ['rebounds', 'assists', 'pra', 'pr', 'pa', 'ra'].includes(leg.stat)) m *= .985;
         if (ownSpot === 'tank' || ownSpot === 'rest') m *= 1 - S.motivePen / 100;
         const df = defFactor(home ? g.away : g.home, leg.stat);
         m *= df;
@@ -740,6 +796,11 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     if (leg.type !== 'game_total') {
       if (ownB2B) flags.push(['B2B 2nd night', 'warn']);
       if (oppB2B) flags.push(['Opp on B2B', 'good']);
+      const fOwn = fatigueOf(home ? g.home : g.away, g), fOpp = fatigueOf(home ? g.away : g.home, g);
+      if (fOwn.tif) flags.push(['3 games in 4 nights', 'warn']); else if (fOpp.tif) flags.push(['Opp 3 in 4 nights', 'good']);
+      if (fOwn.ot) flags.push(['OT last game', 'warn']);
+      if (!home && ALTITUDE.includes(g.home)) flags.push(['Altitude road game', 'warn']);
+      if (fOwn.rest != null && fOwn.rest >= 2 && (oppB2B || fOpp.tif)) flags.push(['Rest edge', 'good']);
       if (ownSpot === 'tank') flags.push(['Tank spot', 'bad']);
       if (ownSpot === 'rest') flags.push(['Rest risk', 'bad']);
       if (ownSpot === 'must') flags.push(['Must-win', 'good']);
@@ -775,7 +836,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     if (l.type === 'margin') { const lo = fnum(l.lo), hi = fnum(l.hi); return team + ' by ' + (hi == null ? lo + '+' : lo + '-' + hi) + perS; }
     const H = fnum(l.line); return team + ' ' + (H != null && H > 0 ? '+' : '') + (l.line || '?') + perS;
   }
-  const matchup = g => g ? tname(g.away) + ' @ ' + tname(g.home) : '';
+  const matchup = g => g ? tname(g.away) + ' vs ' + tname(g.home) : '';
 
   // ---- correlation simulation ----
   function loads(l) {
@@ -788,8 +849,12 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     else if (l.type === 'game_total') { T = .95 * f; }
     else if (l.type === 'margin') { const lo = fnum(l.lo) || 1; M = (lo >= 11 ? .7 : lo >= 6 ? .5 : .25) * sg * f; }
     else if (l.type !== 'luck') { M = .95 * sg * f; }
-    return { T: T * dir, M: M * dir, P: P * dir, I: Math.sqrt(Math.max(0, 1 - (T * T + M * M + P * P))), pk: l.type === 'player' ? l.gameId + '|' + String(l.player || '').trim().toLowerCase() : null };
+    // Teammates share one ball: scorers compete for shots, bigs for rebounds.
+    const grp = l.type !== 'player' ? null : ['points', 'threes', 'pra', 'pr', 'pa'].includes(l.stat) ? 'shots' : l.stat === 'rebounds' ? 'boards' : null;
+    return { T: T * dir, M: M * dir, P: P * dir, I: Math.sqrt(Math.max(0, 1 - (T * T + M * M + P * P))), pk: l.type === 'player' ? l.gameId + '|' + String(l.player || '').trim().toLowerCase() : null, cg: grp ? l.gameId + '|' + l.team + '|' + grp : null, grp };
   }
+  // Pairwise correlation of teammates' own form within a competition group (before game-wide factors).
+  const COMPETE = { shots: -.3, boards: -.25 };
   function simulate(list, n, seed) {
     const r = rng(seed); let spare = null;
     const gauss = () => { if (spare != null) { const s = spare; spare = null; return s; } let u = 0, v = 0; while (u === 0) u = r(); v = r(); const m = Math.sqrt(-2 * Math.log(u)); spare = m * Math.sin(2 * Math.PI * v); return m * Math.cos(2 * Math.PI * v); };
@@ -797,14 +862,23 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     const L = list.map(x => Object.assign(loads(x.leg), { g: games.indexOf(x.leg.gameId), thr: invPhi(x.p) }));
     const players = [...new Set(L.map(l => l.pk).filter(Boolean))];
     L.forEach(l => { l.pi = l.pk ? players.indexOf(l.pk) : -1; });
+    // Competition groups: centre the players' form within each team group so one scorer's big night eats into another's.
+    const groups = {};
+    L.forEach(l => { if (l.cg && l.pi >= 0) { const gr = groups[l.cg] = groups[l.cg] || { r: COMPETE[l.grp], ps: [] }; if (!gr.ps.includes(l.pi)) gr.ps.push(l.pi); } });
+    const G = Object.keys(groups).map(k => { const gr = groups[k], kk = gr.ps.length; if (kk < 2) return null; const r = Math.max(gr.r, -.9 / (kk - 1)), a = 1 - Math.sqrt(Math.max(0, 1 + r * kk / (1 - r))); return { key: k, ps: gr.ps, a, sc: 1 / Math.sqrt(1 - 2 * a / kk + a * a / kk) }; }).filter(Boolean);
+    const gIdx = {}; G.forEach((g, i) => { gIdx[g.key] = i; });
+    L.forEach(l => { l.gi = l.cg && gIdx[l.cg] != null ? gIdx[l.cg] : -1; });
+    const fC = G.map(g => new Float64Array(players.length));
     const hits = L.map(() => new Uint8Array(n));
     const fT = new Float64Array(games.length), fM = new Float64Array(games.length), fP = new Float64Array(players.length);
     for (let s = 0; s < n; s++) {
       for (let g = 0; g < games.length; g++) { fT[g] = gauss(); fM[g] = gauss(); }
       for (let q = 0; q < players.length; q++) fP[q] = gauss();
+      for (let gi = 0; gi < G.length; gi++) { const g = G[gi]; let m = 0; for (const q of g.ps) m += fP[q]; m /= g.ps.length; for (const q of g.ps) fC[gi][q] = (fP[q] - g.a * m) * g.sc; }
       for (let i = 0; i < L.length; i++) {
         const l = L[i];
-        const z = l.T * fT[l.g] + l.M * fM[l.g] + (l.pi >= 0 ? l.P * fP[l.pi] : 0) + l.I * gauss();
+        const pf = l.pi < 0 ? 0 : l.gi >= 0 ? fC[l.gi][l.pi] : fP[l.pi];
+        const z = l.T * fT[l.g] + l.M * fM[l.g] + l.P * pf + l.I * gauss();
         hits[i][s] = z < l.thr ? 1 : 0;
       }
     }
@@ -928,7 +1002,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       const outN = list.filter(x => x.status === 'out').length, qN = list.length - outN;
       const preview = list.slice(0, 3).map(x => `<span class="chip ${LVL[x.lvl][0]}${x.status === 'q' ? ' q' : ''}">${esc(x.name)}${x.status === 'q' ? ' (Q)' : ''}</span>`).join('') + (list.length > 3 ? `<span class="chip">+${list.length - 3} more</span>` : '');
       const key = g.id + '|' + sd;
-      return `<details class="inj" data-key="${esc(key)}"${openInj.has(key) ? ' open' : ''}><summary><span class="label">${esc(tname(sd === 'home' ? g.home : g.away))} · ${outN} out${qN ? ', ' + qN + ' questionable' : ''}</span><div class="chips">${preview}</div></summary>
+      return `<details class="inj" data-key="${esc(key)}"${openInj.has(key) ? ' open' : ''}><summary><span class="label">${tb(sd === 'home' ? g.home : g.away)}${esc(tname(sd === 'home' ? g.home : g.away))} · ${outN} out${qN ? ', ' + qN + ' questionable' : ''}</span><div class="chips">${preview}</div></summary>
         <ul>${list.map(x => `<li><span class="dot ${LVL[x.lvl][0]}"></span><div><strong>${esc(x.name)}</strong> <span class="help">${x.status === 'q' ? 'Questionable' : 'Out'} · ${LVL[x.lvl][2]}</span><br><span class="help">${esc(x.text)}</span></div></li>`).join('')}</ul></details>`;
     }).join('');
   }
@@ -944,6 +1018,8 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       const dp = e.pace - L;
       if (dp >= 2) chips.push(['Fast pace ' + e.pace.toFixed(1), 'good']); else if (dp <= -2) chips.push(['Slow pace ' + e.pace.toFixed(1), 'warn']);
       if (g.b2bA) chips.push([tname(g.away) + ' on B2B', 'warn']); if (g.b2bH) chips.push([tname(g.home) + ' on B2B', 'warn']);
+      [[g.away, 'A'], [g.home, 'H']].forEach(([tm]) => { const f = fatigueOf(tm, g); if (f.tif) chips.push([tname(tm) + ' 3 games in 4 nights', 'warn']); if (f.ot) chips.push([tname(tm) + ' played OT last game', 'warn']); });
+      if (ALTITUDE.includes(g.home)) chips.push([tname(g.away) + ' at altitude', 'warn']);
       [['spotA', g.away], ['spotH', g.home]].forEach(([k, t]) => { const s = g[k]; if (s === 'tank') chips.push([tname(t) + ' tank spot', 'bad']); if (s === 'rest') chips.push([tname(t) + ' rest risk', 'bad']); if (s === 'must') chips.push([tname(t) + ' must-win', 'good']); });
       if (e.blowout) chips.push(['Blowout risk', 'warn']);
       const rpx = e.rp, bt = pos(g.total);
@@ -957,8 +1033,8 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       const bits = [g.total ? 'Bookies expect ' + g.total + ' total points' : '', hl != null ? (hl === 0 ? 'no favourite' : favT + ' favoured by ' + Math.abs(hl)) : '', e.projTotal != null && Math.abs(e.projTotal - pos(g.total)) >= 0.5 ? 'Leg Room projects ' + e.projTotal.toFixed(1) + ' after pace and spots' : ''].filter(Boolean).join(' · ');
       const nLegs = legsList().filter(l => l.gameId === g.id).length;
       const lv = liveFor(g);
-      const liveLine = lv ? `<div class="live${lv.live ? '' : ' final'}">${lv.live ? '<span class="dotlive" aria-hidden="true"></span>LIVE' : 'FINAL'}<b>${esc(tname(g.away))} ${lv.a} – ${lv.h} ${esc(tname(g.home))}</b>${lv.live ? `<span>${lv.half ? 'Half-time' : (lv.q ? (lv.q > 4 ? 'OT' : 'Q' + lv.q) : '') + (lv.clock && !lv.half ? ' ' + esc(lv.clock) : '')}</span>` : ''}</div>` : '';
-      html += `<div class="game"><div class="gtop"><div class="teams">${esc(tname(g.away))}<span>@</span>${esc(tname(g.home))}</div>
+      const liveLine = lv && lv.dummy ? `<div class="live dummy"><span class="dotlive" aria-hidden="true"></span>LIVE<b>${esc(tname(g.away))} <i class="ph" aria-hidden="true"></i> – <i class="ph" aria-hidden="true"></i> ${esc(tname(g.home))}</b><span>Live score shows on the website</span></div>` : lv ? `<div class="live${lv.live ? '' : ' final'}">${lv.live ? '<span class="dotlive" aria-hidden="true"></span>LIVE' : 'FINAL'}<b>${esc(tname(g.away))} ${lv.a} – ${lv.h} ${esc(tname(g.home))}</b>${lv.live ? `<span>${lv.half ? 'Half-time' : (lv.q ? (lv.q > 4 ? 'OT' : 'Q' + lv.q) : '') + (lv.clock && !lv.half ? ' ' + esc(lv.clock) : '')}</span>` : ''}</div>` : '';
+      html += `<div class="game"><div class="gtop"><div class="teams">${tb(g.away)}${esc(tname(g.away))}<i class="vs" aria-label="versus">vs</i>${tb(g.home)}${esc(tname(g.home))}</div>
         <div class="gtime">${g.time ? startOf(g).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) : 'Time TBC'} · ${nLegs} leg${nLegs === 1 ? '' : 's'}</div></div>
         ${liveLine}
         ${defLine}${ratLine}
@@ -1041,21 +1117,30 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
         const st = n => { const x = inj[side].find(i => nm(i.name) === nm(n)); return x ? x.status : null; };
         // Only a fresh absence changes things: if he has missed most games already, the averages reflect it.
         const teamGp = Math.max(1, ...roster.map(p => p.gp || 0));
-        const freshOut = roster.filter(p => st(p.name) === 'out' && (p.gp || 0) >= Math.max(2, teamGp * .7) && (p.min || 0) >= 12);
+        // ...and only if he was still playing in the last few days; otherwise recent minutes already reflect it.
+        const playedLately = p => { const lg = (LOGS[nm(p.name)] || []).filter(r => r.date < today); if (!Object.keys(LOGS).length) return true; return !!lg.length && dayN(today) - dayN(lg[0].date) <= 4; };
+        const freshOut = roster.filter(p => st(p.name) === 'out' && (p.gp || 0) >= Math.max(2, teamGp * .7) && (p.min || 0) >= 12 && playedLately(p));
         const outStars = freshOut.filter(p => (p.pts || 0) >= 10).map(p => p.name);
         // Starters: games-started data when we have it, otherwise the five biggest minutes among available players.
         const avail = roster.filter(p => st(p.name) !== 'out' && p.gp >= 1);
         const hasGs = avail.some(p => p.gs != null);
         const byMin = avail.slice().sort((a, b) => (b.min || 0) - (a.min || 0)).slice(0, 5).map(p => p.name);
-        const roleOf = p => hasGs && p.gs != null ? (p.gs / Math.max(1, p.gp) >= .5 ? 'starter' : 'bench') : (byMin.includes(p.name) ? 'starter' : 'bench');
+        const RR = {}; roster.forEach(p => { RR[p.name] = recentRole(p.name); });
+        // A role change in the last three games beats the season split (new starter, or moved to the bench).
+        const roleOf = p => { const rr = RR[p.name]; if (rr && rr.start3) return 'starter'; if (rr && rr.bench3) return 'bench'; return hasGs && p.gs != null ? (p.gs / Math.max(1, p.gp) >= .5 ? 'starter' : 'bench') : (byMin.includes(p.name) ? 'starter' : 'bench'); };
+        // Minutes base: season average blended with his last five games, so role changes show up quickly.
+        const baseMin = p => { const rr = RR[p.name], s = p.min || 0; if (!rr) return s; const w = Math.min(.6, .35 + .05 * rr.n); return s * (1 - w) + rr.min * w; };
         // ---- tonight's minutes ----
-        const e1 = env(g), absM = e1.margin != null ? Math.abs(e1.margin) : 0, ownB2B = side === 'home' ? g.b2bH : g.b2bA;
+        const e1 = env(g), absM = e1.margin != null ? Math.abs(e1.margin) : 0, ownB2B = side === 'home' ? g.b2bH : g.b2bA, fat = fatigueOf(side === 'home' ? g.home : g.away, g);
         const projMin = {}, addMin = {}, minWhy = {};
         avail.forEach(p => {
-          let m = p.min || 0; const why = [];
+          let m = baseMin(p); const why = [];
+          const trend = m - (p.min || 0); if (Math.abs(trend) >= 1.5) why.push('minutes trending ' + (trend > 0 ? 'up' : 'down') + ', ' + Math.round(RR[p.name].min) + ' a night in his last ' + RR[p.name].n);
           if (roleOf(p) === 'starter') {
             const cut = Math.max(0, Math.min(.12, (absM - 8) * .01)); if (cut > .005) { m *= 1 - cut; why.push('blowout risk'); }
             if (ownB2B) { m *= .96; why.push('back-to-back'); }
+            if (fat.tif) { m *= .97; why.push('third game in four nights'); }
+            if (fat.ot) { m *= .98; why.push('played overtime last game'); }
           } else {
             const up = Math.max(0, Math.min(.15, (absM - 8) * .012)); if (up > .005) { m *= 1 + up; why.push('garbage time'); }
           }
@@ -1076,7 +1161,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
         });
         const SK = { points: ['pts'], rebounds: ['reb'], assists: ['ast'], threes: ['thr'], steals: ['stl'], blocks: ['blk'], pra: ['pts', 'reb', 'ast'], pr: ['pts', 'reb'], pa: ['pts', 'ast'] };
         roster.forEach(p => {
-          if ((p.min || 0) < 18 || !(p.gp >= 1) || st(p.name) === 'out') return;
+          if (Math.max(p.min || 0, baseMin(p)) < 18 || !(p.gp >= 1) || st(p.name) === 'out') return;
           const role = roleOf(p), mins = p.min, pm = projMin[p.name] || mins, ratio = pm / Math.max(1, mins);
           const status = st(p.name) === 'q' ? 'q' : 'ok';
           const A = { points: p.pts, rebounds: p.reb, assists: p.ast, threes: p.thr, steals: p.stl, blocks: p.blk, pra: (p.pts || 0) + (p.reb || 0) + (p.ast || 0), pr: (p.pts || 0) + (p.reb || 0), pa: (p.pts || 0) + (p.ast || 0) };
@@ -1124,8 +1209,16 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   const rowOf = p => ({ pts: +p.pts || 0, reb: +p.reb || 0, ast: +p.ast || 0, thr: +p.thr || 0, stl: +p.stl || 0, blk: +p.blk || 0 });
   let LOGS = {};
   function buildLogs() {
-    LOGS = {};
-    Object.keys(RESULTS).sort().reverse().forEach(d => ((RESULTS[d] || {}).games || []).forEach(g => ['away', 'home'].forEach(sd => ((g.players || {})[sd] || []).forEach(p => { const k = nm(p.name); (LOGS[k] = LOGS[k] || []).push(Object.assign({ date: d }, rowOf(p))); }))));
+    LOGS = {}; FATIGUE = {};
+    Object.keys(RESULTS).sort().reverse().forEach(d => ((RESULTS[d] || {}).games || []).forEach(g => ['away', 'home'].forEach(sd => ((g.players || {})[sd] || []).forEach(p => { const k = nm(p.name); (LOGS[k] = LOGS[k] || []).push(Object.assign({ date: d, min: p.min != null ? +p.min : null, st: p.st != null ? +p.st : null, team: g[sd] }, rowOf(p))); }))));
+  }
+  // Recent role: minutes and starts over his last five games, from the box scores.
+  function recentRole(name) {
+    const log = (LOGS[nm(name)] || []).filter(r => r.date < today && r.min != null).slice(0, 5);
+    if (log.length < 3) return null;
+    const min = log.reduce((a, r) => a + r.min, 0) / log.length;
+    const st3 = log.slice(0, 3).filter(r => r.st != null), started = st3.filter(r => r.st === 1).length;
+    return { min, n: log.length, start3: st3.length === 3 ? started === 3 : null, bench3: st3.length === 3 ? started === 0 : null };
   }
   const histGames = () => Object.values(RESULTS).reduce((a, r) => a + ((r && r.games) ? r.games.length : 0), 0);
   // A player's own game-to-game swing for a stat, shrunk toward the default while the sample is small.
@@ -1276,7 +1369,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   function sbList(xs, multi, item) {
     let html = '', lastG = null, lastSec = null, lastMkt = null, step = 0;
     sbSort(xs).forEach(x => {
-      if (multi && x.leg.gameId !== lastG) { html += `<li class="sbgame">${esc(matchup(x.g))}</li>`; lastG = x.leg.gameId; lastSec = null; lastMkt = null; step = 0; }
+      if (multi && x.leg.gameId !== lastG) { html += `<li class="sbgame">${matchupB(x.g)}</li>`; lastG = x.leg.gameId; lastSec = null; lastMkt = null; step = 0; }
       if (x.sb.sec !== lastSec) { step++; html += `<li class="sbsec"><span class="sbn">${step}</span>${esc(x.sb.sec)}</li>`; lastSec = x.sb.sec; lastMkt = null; }
       if (x.sb.mkt && x.sb.mkt !== lastMkt) { html += `<li class="sbmkt">${esc(x.sb.mkt)}</li>`; lastMkt = x.sb.mkt; }
       html += item(x);
@@ -1470,10 +1563,10 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   // ---- suggestions ----
   const TIERS = [
     { key: 'safe', label: 'Safe', pmin: .68, pmax: .9, bench: false, blurb: 'Only the most reliable legs, starters only.' },
-    { key: 'med', label: 'Medium risk', pmin: .55, pmax: .8, bench: 22, blurb: 'Legs that land more often than not, each a little harder. Bench players only if they play big minutes.' },
-    { key: 'high', label: 'High risk', pmin: .42, pmax: .7, bench: 0, blurb: 'Harder legs that need things to go right, bench scorers included.' }
+    { key: 'med', label: 'Medium risk', pmin: .55, pmax: .78, bench: 22, blurb: 'Legs that land more often than not, each a little harder. Bench players only if they play big minutes.' },
+    { key: 'high', label: 'High risk', pmin: .3, pmax: .55, bench: 0, blurb: 'Bigger lines that each land less than half the time, bench scorers included. Big payouts, rarely lands.' }
   ];
-  const MAXLEGS = 12;
+  const MAXLEGS = 20;
   const clampLegs = v => Math.max(2, Math.min(MAXLEGS, Math.round(+v) || 3));
   let legsN = clampLegs(load('legroom-legs') || 3);
   const curSize = () => ({ label: legsN + ' legs', min: 2, max: legsN, want: legsN });
@@ -1506,6 +1599,11 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       'Slow pace': 'slow game, fewer possessions',
       'Opp on B2B': 'opponent is on the second night of a back-to-back',
       'B2B 2nd night': 'his team is on a back-to-back, legs may be heavy',
+      '3 games in 4 nights': 'third game in four nights, so expect tired legs, especially on rebounds and assists',
+      'Opp 3 in 4 nights': 'opponent is playing its third game in four nights',
+      'OT last game': 'his team went to overtime last game, so starters logged extra minutes',
+      'Altitude road game': 'road game at altitude in ' + (g ? tname(g.home) : '') + ', where visitors tend to tire late',
+      'Rest edge': 'his team is rested while the opponent is on tired legs',
       'Blowout risk': 'big line, so starters could sit late',
       'Blowout: more bench minutes': 'big line, so the bench could get extra minutes late',
       'Questionable': 'listed questionable, check news before tip-off',
@@ -1560,7 +1658,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   function bestCombo(pool, sz, seed, forced) {
     forced = forced || [];
     if (pool.length < sz.min) return null;
-    const n = 5000, hits = simulate(pool.map(x => ({ leg: x.leg, p: x.r.p })), n, seed), B = 50;
+    const bigRun = sz.max > 12, n = bigRun ? 2500 : 5000, hits = simulate(pool.map(x => ({ leg: x.leg, p: x.r.p })), n, seed), B = bigRun ? 24 : 50;
     const adj = pool.map(x => legScore(x) - x.r.p);
     const start = { idx: forced.slice().sort((a, b) => a - b), mask: null };
     if (forced.length) { const m = new Uint8Array(n); for (let s = 0; s < n; s++) { let v = 1; forced.forEach(f => { v &= hits[f][s]; }); m[s] = v; } start.mask = m; }
@@ -1585,11 +1683,13 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     }
     if (!best) return null;
     const ind = best.idx.reduce((a, j) => a * pool[j].r.p, 1);
-    return { legs: best.idx.map(j => pool[j]), jp: best.jp, lift: ind > 0 ? best.jp / ind : 1 };
+    let jp = best.jp;
+    if (bigRun) { const legs = best.idx.map(j => pool[j]), N = 12000, h2 = simulate(legs.map(x => ({ leg: x.leg, p: x.r.p })), N, seed + 7); jp = joint(h2, legs.map((_, j) => j), N); }
+    return { legs: best.idx.map(j => pool[j]), jp, lift: ind > 0 ? jp / ind : 1 };
   }
   function buildSGM(gameId, t, sz, seed) {
     const big = sz.max >= 7;
-    let pool = diversePool(ratedLegs(l => l.gameId === gameId), t, Math.min(24, Math.max(14, sz.max + 6)), big ? 3 : 2), forced = [], fl = null;
+    let pool = diversePool(ratedLegs(l => l.gameId === gameId), t, Math.min(32, Math.max(14, sz.max + 8)), sz.max >= 14 ? 4 : big ? 3 : 2), forced = [], fl = null;
     if (mustPlayer) {
       fl = forcedLeg(mustPlayer, t, l => l.gameId === gameId);
       if (!fl) return { err: 'player' };
@@ -1686,7 +1786,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   function cardHTML(s, key, sz) {
     REG[key] = s;
     return `<div class="sugg"><div class="phead"><span class="tier ${s.tier.key}">${esc(s.tier.label)}</span><span class="label">${s.legs.length} legs · ${pct(s.jp, s.jp < .1 ? 1 : 0)} · ${oneIn(s.jp)}</span></div>
-      ${s.game ? `<div class="label">${esc(matchup(s.game))} · ${s.game.time ? startOf(s.game).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) : ''}</div>` : ''}
+      ${s.game ? `<div class="label">${matchupB(s.game)} · ${s.game.time ? startOf(s.game).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) : ''}</div>` : ''}
       <p class="help">Listed in the order of Sportsbet's market sections, so you can work down the page once.</p>
       ${s.note ? `<p class="help status ok">${esc(s.note)}</p>` : ''}
       <ul class="sblist">${sbList(s.legs, s.mode === 'multi', x => `<li><div class="legrow"><div><strong>${esc(title(x.leg))}</strong> <b>${pct(x.r.p)}</b></div>${x.leg.id === s.forcedId ? '<span class="chip good">Must include</span>' : `<button class="btn small swap" type="button" data-swap="${key}|${esc(x.leg.id)}">Swap</button>`}</div><span class="why">${esc(legWhy(x.leg, x.r))}</span></li>`)}</ul>
@@ -1697,7 +1797,10 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   const statsNote = () => statsAsOf ? `<p class="help">Player averages from ESPN, ${esc(statsAsOf)}${histGames() ? '; hit rates from ' + histGames() + ' games of box scores' : ''}.</p>` : '';
   $('sugGameF').hidden = slip.mode !== 'sgm';
   let lastTier = null, bestKind = 'sgm', lastBestTier = null;
-  function showLegs() { document.querySelectorAll('.legsN').forEach(i => { if (+i.value !== legsN) i.value = legsN; }); }
+  function showLegs() {
+    document.querySelectorAll('.legsN').forEach(i => { if (+i.value !== legsN) i.value = legsN; });
+    document.querySelectorAll('.stepper [data-step]').forEach(b => { const s = +b.dataset.step; b.disabled = s < 0 ? legsN <= 2 : legsN >= MAXLEGS; });
+  }
   showLegs();
   let legsTimer = null;
   function setLegs(v) {
@@ -1904,15 +2007,134 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   }
   function liveFor(g) {
     const x = LIVE[liveKey(g.away, g.home)];
+    if ((!x || x.a == null || x.h == null) && window.claude && window.claude.use && g.time) {
+      // Development copy: no live feed, so show a placeholder while the game should be on.
+      const t = startOf(g).getTime(), now = Date.now();
+      return now >= t && now < t + 150 * 60e3 ? { live: true, dummy: true } : null;
+    }
     if (!x || x.a == null || x.h == null) return null;
     if (x.start && g.time && Math.abs(x.start - startOf(g)) > 12 * 3600e3) return null;
     return x;
   }
+  const IN_CLAUDE = !!(window.claude && window.claude.use);
+  // ---- Claude copy: data from the artifact database, live scores via the connector ----
+  let mcpNS = null, liveBusy = false, liveRetry = null;
+  const LIVE_IN = { data_type: 'scores', league: 'nba' };
+
+  function parseRes(r) {
+    r = r || {}; let pl = r.payload;
+    if (typeof pl === 'string') { try { pl = JSON.parse(pl); } catch (e) { pl = null; } }
+    if ((!pl || !pl.games) && r.structuredContent && r.structuredContent.games) pl = r.structuredContent;
+    if ((!pl || !pl.games) && Array.isArray(r.content)) { const t = r.content.find(c => c.type === 'text'); if (t) { try { pl = JSON.parse(t.text); } catch (e) {} } }
+    return pl;
+  }
+  let lastMcpAt = 0, dbLive = null;
+  function useDbLive() {
+    if (!dbLive || !Array.isArray(dbLive.games) || Date.now() - lastMcpAt < 150000) return;
+    onScores({ games: dbLive.games });
+    const t = dbLive.updated ? new Date(dbLive.updated) : null;
+    const nLive = Object.values(LIVE).filter(x => x.live).length;
+    liveStatus((nLive ? nLive + ' game' + (nLive > 1 ? 's' : '') + ' live' : 'No games live right now') + (t && !isNaN(t) ? ' · scores as of ' + t.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) : '') + ', updated every 10 minutes', mcpNS ? 'Try live feed' : null, !nLive);
+  }
+  function gotScores(r) {
+    lastMcpAt = Date.now();
+    const pl = parseRes(r);
+    if (!pl || !Array.isArray(pl.games)) { liveStatus('The scores feed answered but sent no games.', 'Try again', true); return; }
+    onScores(pl);
+    const t = r && r.cache && r.cache.storedAt ? new Date(r.cache.storedAt) : new Date();
+    const nLive = Object.values(LIVE).filter(x => x.live).length;
+    liveStatus((nLive ? nLive + ' game' + (nLive > 1 ? 's' : '') + ' live' : 'No games live right now') + ' · scores updated ' + t.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) + ', refreshing every minute', 'Refresh', !nLive);
+  }
+  function liveErr(err) {
+    const c = (err && err.code) || 'upstream_error';
+    const msgs = {
+      approval_required: ['Live scores need your OK. Tap the button and choose Allow.', 'Load live scores'],
+      not_in_manifest: ['Live scores are switched off for this page. Open the page menu (⋮), then Permissions, and turn on widgets.', 'Try again'],
+      server_not_connected: ['The sports scores connection isn\'t available on this device.', 'Try again'],
+      selection_required: ['Pick which scores connection to use when asked, then tap Try again.', 'Try again'],
+      blocked_by_policy: ['Your account settings block the scores connection.', null],
+      not_granted: ['Live scores weren\'t allowed for this page. Tap to ask again.', 'Load live scores'],
+      capability_disabled: ['Live scores don\'t work in this view of the app.', null],
+      capability_removed: ['Live scores don\'t work in this view of the app.', null],
+      consent_required: ['Live scores need your OK. Tap the button and choose Allow.', 'Load live scores']
+    };
+    const m = msgs[c] || ['Couldn\'t reach the scores feed just now (' + c + (err && err.message ? ': ' + String(err.message).slice(0, 80) : '') + ').', 'Try again'];
+    lastMcpAt = 0;
+    if (dbLive) { useDbLive(); return; }
+    liveStatus(m[0], m[1], true);
+    if (err && err.retryable && !liveRetry) liveRetry = setTimeout(() => { liveRetry = null; manualLive(); }, Math.max(3000, err.retryAfterMs || 5000));
+  }
+  async function manualLive() {
+    if (liveBusy) return;
+    if (!mcpNS) { liveStatus('Live scores aren\'t available in this view of the app.', null, true); return; }
+    liveBusy = true; liveStatus('Checking scores…', null, true);
+    try { gotScores(await mcpNS.callTool('widgets', 'fetch_sports_data', LIVE_IN, { cache: { staleTime: 20000 } })); }
+    catch (e) { liveErr(e); }
+    liveBusy = false;
+  }
+  async function connectLiveClaude() {
+    $('liveBtn').addEventListener('click', manualLive);
+    if (!window.claude || !window.claude.use) return;
+    liveStatus('Connecting to live scores…', null, true);
+    let mcp = null; try { mcp = await window.claude.use('mcp'); } catch (e) { mcp = null; }
+    if (!mcp) { liveStatus('Live scores aren\'t available in this view of the app.', null, true); return; }
+    mcpNS = mcp; liveOn = true;
+    try {
+      mcp.watchTool('widgets', 'fetch_sports_data', LIVE_IN, ev => {
+        if (ev.type === 'data') gotScores(ev.result);
+        else if (ev.type === 'error') liveErr(ev.error);
+      }, { refetchInterval: 60000, cache: { staleTime: 30000 } });
+    } catch (e) { liveErr(e); }
+  }
+
+  async function connectStore() {
+    if (!window.claude || !window.claude.use) return;
+    try {
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (db) {
+        db.doc('auto/live').onSnapshot(s => { dbLive = s.exists ? s.data() : null; useDbLive(); }, () => {});
+        db.doc('auto/slate').onSnapshot(s => {
+          const d = s.exists ? s.data() : null;
+          sched = d && Array.isArray(d.games) ? d.games : []; statsAsOf = d && d.statsAsOf ? d.statsAsOf : null;
+          schedUpdated = d && d.updated ? new Date(d.updated) : null;
+          injUpdated = d && d.injUpdated ? new Date(d.injUpdated) : null;
+          const fmt = dt => dt.toLocaleString('en-AU', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+          const lastInj = [schedUpdated, injUpdated].filter(x => x && !isNaN(x)).sort((a, b) => b - a)[0];
+          $('schedNote').textContent = schedUpdated && !isNaN(schedUpdated) ? 'Development copy. Data is copied from the website when you ask Claude to refresh it. Last update ' + fmt(schedUpdated) + '. Live scores are on the website.' : '';
+          renderAll();
+        }, () => {});
+        db.doc('auto/lastseason').onSnapshot(s4 => { setLast(s4.exists ? (s4.data() || {}).players : {}); renderAll(); }, () => {});
+        db.doc('auto/teams').onSnapshot(s3 => { TEAMDEF = s3.exists ? ((s3.data() || {}).teams || {}) : {}; buildDef(); renderAll(); }, () => {});
+        db.collection('results').onSnapshot(s2 => {
+          const R = {}; s2.docs.forEach(d => { R[d.id] = d.data(); });
+          RESULTS = R; buildLogs(); computeCal(); renderAll(); renderTrack();
+        }, () => {});
+      }
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) return;
+      col = db.collection('data/users/' + uid);
+      let first = true;
+      const timer = setTimeout(() => fstat("Can't reach your saved slate yet. Showing what's on this device."), 10000);
+      col.onSnapshot(snap => {
+        const next = {};
+        snap.docs.forEach(d => { const x = d.data(); if (x && x.kind === 'picks') PICKS[d.id] = x; else next[d.id] = x; });
+        if (first && snap.empty) {
+          const loc = load(ITEMS_KEY) || {};
+          Object.keys(loc).forEach(id => { next[id] = loc[id]; queue(() => col.doc(id).set(loc[id])); });
+          save(ITEMS_KEY, {});
+        }
+        first = false; items = next; computeCal(); renderAll(); renderTrack();
+        if (!snap.metadata.fromCache) { clearTimeout(timer); if (/reach/.test($('fillStatus').textContent)) fstat(''); }
+      }, () => { clearTimeout(timer); col = null; fstat("Your saved slate couldn't load, so changes are kept on this device for now.", 'err'); });
+    } catch (e) { col = null; }
+  }
+
+  // ---- Website copy: data files from the GitHub updater, live scores from ESPN ----
   // ---- live scores straight from ESPN's public scoreboard ----
   const ESPN_SB = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard';
   const ESPN_FIX = { GS: 'GSW', NY: 'NYK', SA: 'SAS', NO: 'NOP', UTAH: 'UTA', WSH: 'WAS', PHO: 'PHX', BRK: 'BKN', CHO: 'CHA' };
   const espnAbbr = a => { a = String(a || '').toUpperCase(); return ESPN_FIX[a] || a; };
-  let liveBusy = false, liveTimer = null, liveFails = 0, DATA_STATUS = null;
+  let liveTimer = null, liveFails = 0, DATA_STATUS = null;
   function liveStatus(msg, btn, off) {
     const bar = $('liveBar'); bar.hidden = false; bar.classList.toggle('off', !!off);
     $('liveMsg').textContent = msg;
@@ -2002,11 +2224,14 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   renderAll();
   renderTrack();
   if (window.__LR_TEST_SCORES) onScores(window.__LR_TEST_SCORES);
-  loadData();
-  connectLive();
+  try { if (/debug/.test(location.search)) window.__LR = { auto: () => AUTO, role: recentRole, fat: fatigueOf, games: gamesList, sim: simulate, joint, rate }; } catch (e) {}
+  if (IN_CLAUDE) {
+    connectStore(); connectSample();
+    liveStatus('Live tracking preview: games in progress are marked LIVE here, and the scores fill in on the website.', null, false);
+    setInterval(() => renderGames(), 60e3);
+  } else { loadData(); connectLive(); }
 })();
 </script>
 
 </body>
 </html>
-
