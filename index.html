@@ -135,6 +135,32 @@ details.form form { margin-top: 12px; }
 @media (prefers-reduced-motion: no-preference) { .ltlist li.lt-preview .ltbar i { animation: phfade 1.6s ease-in-out infinite; } }
 @keyframes ltflash { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--bad) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
 .ltlist li.flash { animation: ltflash 1.2s ease-out 3; }
+/* several tracked multis: one card each, folding open to its legs */
+.ltms { display: flex; flex-direction: column; gap: 10px; }
+.ltm { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); min-width: 0; }
+.ltm.lost { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+.ltm.won { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
+.ltmh { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 0; min-width: 0; }
+.ltmt { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 10px; text-align: left; border: 0; background: transparent; color: var(--ink); font: inherit; padding: 8px 6px 8px 12px; cursor: pointer; border-radius: 10px; }
+.ltmt strong { font-size: .95rem; line-height: 1.25; overflow-wrap: anywhere; }
+.ltmt .ltmsub { grid-column: 1; color: var(--muted); font-size: .8rem; }
+.ltmt .ltmst { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.ltmt .chev { transition: transform .2s ease; color: var(--muted); font-size: .8rem; }
+.ltmt[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.ltpill { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); white-space: nowrap; }
+.ltpill.live { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.ltpill.won { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+.ltpill.lost { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.ltdots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; grid-column: 1; }
+.ltdots i { width: 14px; height: 5px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 28%, transparent); }
+.ltdots i.d-landed, .ltdots i.d-track { background: var(--good); } .ltdots i.d-behind { background: var(--warn); } .ltdots i.d-trouble, .ltdots i.d-lost { background: var(--bad); } .ltdots i.d-preview { background: var(--muted); opacity: .5; }
+.ltdots i.d-track { opacity: .55; }
+.ltm .x { border: 0; background: transparent; color: var(--muted); font-size: 1rem; padding: 8px 10px; border-radius: 8px; flex: none; }
+.ltmb { padding: 0 12px 4px 12px; border-top: 1px solid var(--line); }
+.ltmb .ltsum { margin: 10px 0 2px; font-size: .9rem; }
+.ltundo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); margin: 0 0 10px; }
+.trkrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.trkrow .help { margin: 0; }
 .livebar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; font-size: .85rem; color: var(--muted); margin: 0 0 12px; }
 .livebar #liveMsg { flex: 1 1 180px; min-width: 0; }
 .livebar.off .dotlive { background: var(--muted); animation: none; }
@@ -417,7 +443,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     <p class="lede">Load tonight's games and the legs you're eyeing. Leg Room rates how likely each leg is to land on form, pace, injuries and schedule spot, and works out the chance your Same Game Multi or multi-game multi comes in.</p>
   </header>
   <div class="boards" aria-hidden="true"></div>
-  <div class="devbar" id="devBar" hidden><span class="label">Development copy</span><button type="button" class="btn small" id="testLiveBtn" aria-pressed="false">Test live preview</button><span class="help" id="testNote">Fakes three of the next games being played so you can check the live banner, game cards, matchup panel and leg tracker. Scores are made up.</span></div>
+  <div class="devbar" id="devBar" hidden><span class="label">Development copy</span><button type="button" class="btn small" id="testLiveBtn" aria-pressed="false">Test live preview</button><span class="help" id="testNote">Fakes three of the next games being played so you can check the live banner, game cards, matchup panel and the multi tracker (with two demo multis). Scores are made up.</span></div>
 
   <section class="livebanner" id="liveBanner" aria-label="Games on now" hidden>
     <div class="lb-tag"><span class="dotlive" aria-hidden="true"></span>Live now</div>
@@ -584,9 +610,10 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     <div id="mhBody"></div>
   </section>
   <section class="o-lt panel ltrack" id="ltPanel" aria-labelledby="lth" hidden>
-    <div class="phead"><h2 id="lth"><span class="dotlive" aria-hidden="true"></span>Your multi, live</h2><button class="btn small" type="button" id="ltRefresh">Refresh</button></div>
+    <div class="phead"><h2 id="lth"><span class="dotlive" id="ltDot" aria-hidden="true"></span><span id="ltTitle">Your multis, live</span></h2><button class="btn small" type="button" id="ltRefresh">Refresh</button></div>
     <p class="ltsum" id="ltSum" role="status"></p>
-    <ul class="ltlist" id="ltLegs"></ul>
+    <div class="ltundo" id="ltUndo" hidden></div>
+    <div class="ltms" id="ltLegs"></div>
     <p class="help" id="ltNote"></p>
   </section>
   <section class="o-slip panel" aria-labelledby="sliph">
@@ -598,6 +625,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     <div id="slipLegs"></div>
     <div class="result" id="result"></div>
     <div class="warns" id="warns"></div>
+    <div class="trkrow" id="trkRow" hidden><button class="btn" type="button" id="trackBtn">Track this multi</button><span class="help" id="trackMsg">Saves it to the live tracker, so you can follow several multis at once.</span></div>
   </section>
   </aside>
   </div>
@@ -1109,8 +1137,17 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     else if (l.type !== 'luck') { M = .95 * sg * f; }
     // Teammates share one ball: scorers compete for shots, bigs for rebounds.
     const grp = l.type !== 'player' ? null : ['points', 'threes', 'pra', 'pr', 'pa'].includes(l.stat) ? 'shots' : l.stat === 'rebounds' ? 'boards' : null;
-    return { T: T * dir, M: M * dir, P: P * dir, I: Math.sqrt(Math.max(0, 1 - (T * T + M * M + P * P))), pk: l.type === 'player' ? l.gameId + '|' + String(l.player || '').trim().toLowerCase() : null, cg: grp ? l.gameId + '|' + l.team + '|' + grp : null, grp };
+    // A player's own night: playing time drives every stat he has, and each stat has its own swing on top.
+    // Legs on the same player share those parts, so 20+ points and 25+ points+rebounds move almost together.
+    const W = l.type === 'player' ? Math.sqrt(Math.max(0, 1 - T * T - M * M)) : 0;
+    const cw = l.type === 'player' ? STATMIX[l.stat] || STATMIX.points : null;
+    return { T: T * dir, M: M * dir, W: W * dir, cw, I: l.type === 'player' ? 0 : Math.sqrt(Math.max(0, 1 - (T * T + M * M))), pk: l.type === 'player' ? l.gameId + '|' + String(l.player || '').trim().toLowerCase() : null, cg: grp ? l.gameId + '|' + l.team + '|' + grp : null, grp };
   }
+  // How each market mixes a player's stat swings: [points, rebounds, assists, threes (own part), steals, blocks].
+  const unit = v => { const s = Math.sqrt(v.reduce((a, x) => a + x * x, 0)); return v.map(x => x / s); };
+  const STATMIX = { points: unit([1, 0, 0, 0, 0, 0]), rebounds: unit([0, 1, 0, 0, 0, 0]), assists: unit([0, 0, 1, 0, 0, 0]), threes: unit([.75, 0, 0, .66, 0, 0]), steals: unit([0, 0, 0, 0, 1, 0]), blocks: unit([0, 0, 0, 0, 0, 1]),
+    pr: unit([.8, .5, 0, 0, 0, 0]), pa: unit([.8, 0, .5, 0, 0, 0]), ra: unit([0, .7, .7, 0, 0, 0]), pra: unit([.75, .45, .45, 0, 0, 0]), dd: unit([.5, .6, .6, 0, 0, 0]), td: unit([.45, .6, .65, 0, 0, 0]) };
+  const MINW = .5, COMPW = Math.sqrt(1 - MINW * MINW);
   // Pairwise correlation of teammates' own form within a competition group (before game-wide factors).
   const COMPETE = { shots: -.3, boards: -.25 };
   function simulate(list, n, seed) {
@@ -1126,17 +1163,19 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     const G = Object.keys(groups).map(k => { const gr = groups[k], kk = gr.ps.length; if (kk < 2) return null; const r = Math.max(gr.r, -.9 / (kk - 1)), a = 1 - Math.sqrt(Math.max(0, 1 + r * kk / (1 - r))); return { key: k, ps: gr.ps, a, sc: 1 / Math.sqrt(1 - 2 * a / kk + a * a / kk) }; }).filter(Boolean);
     const gIdx = {}; G.forEach((g, i) => { gIdx[g.key] = i; });
     L.forEach(l => { l.gi = l.cg && gIdx[l.cg] != null ? gIdx[l.cg] : -1; });
-    const fC = G.map(g => new Float64Array(players.length));
+    G.forEach(g => { g.c = g.key.endsWith('|boards') ? 1 : 0; });
     const hits = L.map(() => new Uint8Array(n));
-    const fT = new Float64Array(games.length), fM = new Float64Array(games.length), fP = new Float64Array(players.length);
+    const NP = players.length, fT = new Float64Array(games.length), fM = new Float64Array(games.length), fMin = new Float64Array(NP), C = new Float64Array(NP * 6);
     for (let s = 0; s < n; s++) {
       for (let g = 0; g < games.length; g++) { fT[g] = gauss(); fM[g] = gauss(); }
-      for (let q = 0; q < players.length; q++) fP[q] = gauss();
-      for (let gi = 0; gi < G.length; gi++) { const g = G[gi]; let m = 0; for (const q of g.ps) m += fP[q]; m /= g.ps.length; for (const q of g.ps) fC[gi][q] = (fP[q] - g.a * m) * g.sc; }
+      for (let q = 0; q < NP; q++) { fMin[q] = gauss(); for (let c = 0; c < 6; c++) C[q * 6 + c] = gauss(); }
+      // Teammates competing for shots (points) or boards (rebounds): centre that stat's swing across them.
+      for (let gi = 0; gi < G.length; gi++) { const g = G[gi]; let m = 0; for (const q of g.ps) m += C[q * 6 + g.c]; m /= g.ps.length; for (const q of g.ps) C[q * 6 + g.c] = (C[q * 6 + g.c] - g.a * m) * g.sc; }
       for (let i = 0; i < L.length; i++) {
         const l = L[i];
-        const pf = l.pi < 0 ? 0 : l.gi >= 0 ? fC[l.gi][l.pi] : fP[l.pi];
-        const z = l.T * fT[l.g] + l.M * fM[l.g] + l.P * pf + l.I * gauss();
+        let z = l.T * fT[l.g] + l.M * fM[l.g];
+        if (l.pi >= 0) { const b = l.pi * 6, w = l.cw; let comp = 0; for (let c = 0; c < 6; c++) if (w[c]) comp += w[c] * C[b + c]; z += l.W * (MINW * fMin[l.pi] + COMPW * comp); }
+        else z += l.I * gauss();
         hits[i][s] = z < l.thr ? 1 : 0;
       }
     }
@@ -1163,13 +1202,48 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   const saveSlip = () => save(SLIP_KEY, slip);
   function slipLegs() { const all = legsList(); return slip.ids.map(id => all.find(l => l.id === id)).filter(Boolean); }
 
+  // ---- tracked multis: saved copies of the slip, each followed live on its own ----
+  const TRK_KEY = 'legroom-tracked-v1', TRK_MAX = 12;
+  let slipJP = null;
+  const legKey = legs => legs.map(l => l.id).sort().join('|');
+  const lastStart = m => Math.max(0, ...Object.values(m.games || {}).map(g => g.time ? new Date(g.date + 'T' + g.time).getTime() : 0));
+  // Keep a tracked multi until 18 hours after its last game starts, then let it go.
+  let tracked = (load(TRK_KEY) || []).filter(m => m && Array.isArray(m.legs) && m.legs.length && Date.now() < lastStart(m) + 18 * 3600e3);
+  const saveTracked = () => save(TRK_KEY, tracked.filter(m => !m.demo));
+  function trackBtnState() {
+    const legs = slipLegs(), row = $('trkRow'), b = $('trackBtn'); if (!row) return;
+    row.hidden = !legs.length;
+    if (!legs.length) return;
+    const k = legKey(legs), have = tracked.find(m => m.key === k);
+    b.disabled = !!have || tracked.filter(m => !m.demo).length >= TRK_MAX;
+    b.textContent = have ? 'Tracking ✓' : 'Track this multi';
+    $('trackMsg').textContent = have ? 'This multi is in the live tracker as "' + have.name + '". Change a leg to track another.'
+      : tracked.filter(m => !m.demo).length >= TRK_MAX ? 'You\'re tracking ' + TRK_MAX + ' multis, the most it holds. Remove one from the tracker first.'
+      : tracked.length ? 'Adds it to the live tracker alongside the ' + tracked.length + ' you\'re already following.' : 'Saves it to the live tracker, so you can follow several multis at once.';
+  }
+  function trackSlip() {
+    const legs = slipLegs(); if (!legs.length) return;
+    const k = legKey(legs); if (tracked.some(m => m.key === k)) return;
+    const games = {};
+    legs.forEach(l => { const g = gameOf(l); if (g) games[g.id] = { id: g.id, away: g.away, home: g.home, date: g.date, time: g.time, total: g.total, homeLine: g.homeLine }; });
+    const gl = Object.values(games), sgm = gl.length === 1;
+    const n = tracked.filter(m => !m.demo).length + 1;
+    const name = legs.length + '-leg ' + (sgm ? 'SGM · ' + gl[0].away + ' vs ' + gl[0].home : 'multi · ' + gl.length + ' games');
+    tracked.unshift({ id: 'm' + Date.now().toString(36), key: k, name, n, at: Date.now(), mode: slip.mode, p: slipJP, games,
+      legs: legs.map(l => { const r = rate(l); return Object.assign({}, l, { _proj: r && r.proj != null ? r.proj : null, _p: r && r.p != null ? r.p : null }); }) });
+    if (tracked.length > TRK_MAX + 3) tracked.length = TRK_MAX + 3;
+    LT.open[tracked[0].id] = true;
+    saveTracked(); trackBtnState(); renderTracker(); if (!IN_CLAUDE) pollTracker();
+    const p = $('ltPanel'); if (p && !p.hidden) p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   const likely = p => p >= .7 ? ['Strong', 'value'] : p >= .55 ? ['Solid', 'value'] : p >= .45 ? ['Coin flip', 'fair'] : ['Long shot', 'short'];
   function renderSlip() {
     document.querySelectorAll('.seg button[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === slip.mode)));
     const legs = slipLegs();
     if (!legs.length) {
       $('slipLegs').innerHTML = '<div class="empty">Tap Add on legs in the pool, or let "Build it for me" pick some.</div>';
-      $('result').innerHTML = ''; $('warns').innerHTML = ''; try { renderTracker(); } catch (e) {} return;
+      $('result').innerHTML = ''; $('warns').innerHTML = ''; slipJP = null; trackBtnState(); try { renderTracker(); } catch (e) {} return;
     }
     const rated = legs.map(l => ({ leg: l, r: rate(l) }));
     const multiGames = new Set(legs.map(l => l.gameId)).size > 1;
@@ -1196,7 +1270,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
       const indep = usable.reduce((a, x) => a * x.r.p, 1);
       const lift = indep > 0 ? jp / indep : 1;
       const weakest = usable.slice().sort((a, b) => a.r.p - b.r.p)[0];
-      const lk = likely(jp);
+      const lk = likely(jp); slipJP = jp;
       html = `<div class="stat"><span class="label">Chance it lands</span><b>${pct(jp, jp < 0.1 ? 1 : 0)}</b><small>${oneIn(jp).replace(/^./, c => c.toUpperCase())}</small></div>
         <div class="stat"><span class="label">Legs together</span><b>${lift >= 1.05 ? '+' + Math.round((lift - 1) * 100) + '%' : lift <= .95 ? '−' + Math.round((1 - lift) * 100) + '%' : 'Even'}</b><small>${lift >= 1.05 ? 'They help each other' : lift <= .95 ? 'They work against each other' : 'Unrelated legs'}</small></div>
         <div class="stat"><span class="label">Weakest leg</span><b>${pct(weakest.r.p)}</b><small>${esc(title(weakest.leg))}</small></div>`;
@@ -1204,6 +1278,8 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     }
     $('result').innerHTML = html;
     $('warns').innerHTML = warns.map(w => `<div class="${w[1]}">${esc(w[0])}</div>`).join('');
+    if (!usable.length) slipJP = null;
+    trackBtnState();
     try { renderTracker(); if (!IN_CLAUDE) pollTracker(); } catch (e) {}
   }
 
@@ -2613,10 +2689,18 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
 
 
   // ---- live leg tracker: your multi's legs during the game ----
-  var LT = { box: {}, prev: {}, timer: null, busy: false, err: '' };
+  var LT = { box: {}, prev: {}, open: {}, timer: null, busy: false, err: '', removed: null };
   const PER_Q = { ft: [1, 2, 3, 4], '1h': [1, 2], '2h': [3, 4], q1: [1], q2: [2], q3: [3], q4: [4] };
   const ESPN_SUM = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=';
-  const ltGames = () => [...new Set(slipLegs().map(l => l.gameId))].map(id => gamesList().find(g => g.id === id)).filter(Boolean);
+  // Every multi the tracker follows: the tracked ones, plus the slip itself when it isn't tracked yet.
+  function ltMultis() {
+    const list = tracked.slice(), cur = slipLegs();
+    if (cur.length && !tracked.some(m => m.key === legKey(cur))) list.push({ id: 'cur', name: 'Your multi (not tracked yet)', legs: cur, games: {}, cur: true });
+    return list;
+  }
+  const ltGameOf = (l, m) => gameOf(l) || (m.games && m.games[l.gameId] ? Object.assign({}, m.games[l.gameId]) : null);
+  const mGames = m => { const seen = {}; m.legs.forEach(l => { if (!seen[l.gameId]) { const g = ltGameOf(l, m); if (g) seen[l.gameId] = g; } }); return Object.values(seen); };
+  const ltGames = () => { const seen = {}; ltMultis().forEach(m => mGames(m).forEach(g => { seen[g.id] = seen[g.id] || g; })); return Object.values(seen); };
   const ltWindow = g => { if (TEST.on && TEST.ids.includes(g.id)) return true; if (!g.time) return false; const t = startOf(g).getTime(), now = Date.now(); return now >= t - 30 * 60e3 && now < t + 6 * 3600e3; };
   function parseSummary(js) {
     const comp = ((js.header || {}).competitions || [])[0] || {}, st = comp.status || {}, ty = st.type || {};
@@ -2713,7 +2797,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     }
     return null;
   }
-  function ltRow(x, multiG) {
+  function ltRow(x, multiG, mid) {
     const l = x.l, g = x.g, ev = x.ev, side = l.team === 'home' ? 'home' : 'away', ab = g ? (side === 'home' ? g.home : g.away) : '';
     const c = TCOL[ab] || ['#55607a', '#c9d1e0'];
     const who = l.type === 'player' ? l.player : l.type === 'game_total' ? (g ? tname(g.away) + ' vs ' + tname(g.home) : 'Game total') : (g ? tname(ab) : '');
@@ -2730,42 +2814,69 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     }
     const meta = ev.st === 'preview' ? ev.text : n ? (/on pace for \d+/.exec(ev.text || '') || [''])[0] + (/\d+ min/.exec(ev.text || '') ? ' · ' + /\d+ min/.exec(ev.text)[0] : '') : ev.text;
     const status = `<span class="ltst">${ICON[0]}${ICON[1] ? `<span class="ic" aria-hidden="true"><b>${ICON[1]}</b></span>` : ''}</span>`;
-    return `<li class="lt-${ev.st}${LT.flash && LT.flash.has(l.id) ? ' flash' : ''}">${JERSEY(c[0], c[1] || '#fff')}<div class="ltb"><strong>${esc(who)}${ab && l.type !== 'game_total' ? ' ' + tb(ab) : ''}</strong><span class="ltdesc">${esc(desc)}${multiG && g && l.type === 'player' ? ' · ' + esc(g.away + ' vs ' + g.home) : ''}</span><div class="ltrow">${rail}${status}</div>${meta ? `<span class="ltmeta">${esc(meta.replace(/^ · /, ''))}</span>` : ''}</div></li>`;
+    return `<li class="lt-${ev.st}${LT.flash && LT.flash.has(mid + ':' + l.id) ? ' flash' : ''}">${JERSEY(c[0], c[1] || '#fff')}<div class="ltb"><strong>${esc(who)}${ab && l.type !== 'game_total' ? ' ' + tb(ab) : ''}</strong><span class="ltdesc">${esc(desc)}${multiG && g && l.type === 'player' ? ' · ' + esc(g.away + ' vs ' + g.home) : ''}</span><div class="ltrow">${rail}${status}</div>${meta ? `<span class="ltmeta">${esc(meta.replace(/^ · /, ''))}</span>` : ''}</div></li>`;
+  }
+  function ltEval(l, m, preview) {
+    const g = ltGameOf(l, m), r = rate(l) || (l._proj != null ? { proj: l._proj, p: l._p } : null), B = g && (TEST.on && TEST.ids.includes(g.id) ? testBox(g) : LT.box[g.id]);
+    const at = g && g.time ? startOf(g) : null, when = at ? (ymd(at) === ymd(new Date()) ? '' : at.toLocaleDateString('en-AU', { weekday: 'short' }) + ' ') + at.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) : '';
+    let ev;
+    if (!g) ev = { st: 'none', text: '', frac: 0 };
+    else if (preview) ev = at && at <= Date.now() ? { st: 'preview', text: 'Live progress for this leg shows on the website', frac: .4 } : { st: 'wait', text: 'Starts ' + when, frac: 0 };
+    else if (!B) ev = at && at > Date.now() ? { st: 'wait', text: 'Starts ' + when, frac: 0 } : { st: 'wait', text: 'Checking the box score…', frac: 0 };
+    else ev = evalLeg(l, r, B, g);
+    return { l, g, ev };
+  }
+  function mSummary(rows, preview) {
+    const cnt = st => rows.filter(x => x.ev.st === st).length, all = rows.length, lost = rows.filter(x => x.ev.st === 'lost');
+    if (preview) return { cls: '', pill: ['Preview', ''], text: 'Live progress fills in on the website.' };
+    if (lost.length) return { cls: 'lost', pill: ['Lost', 'lost'], text: 'Lost: ' + lost.map(x => title(x.l)).join(', ') + ' fell short.' };
+    if (cnt('landed') === all) return { cls: 'won', pill: ['Won', 'won'], text: 'Every leg has landed.' };
+    const started = rows.some(x => x.ev.st !== 'wait' && x.ev.st !== 'none');
+    const text = [[cnt('landed'), 'landed'], [cnt('track'), 'on track'], [cnt('behind'), 'behind pace'], [cnt('trouble'), 'in trouble'], [cnt('wait'), 'not started']].filter(x => x[0]).map(x => x[0] + ' ' + x[1]).join(' · ');
+    return { cls: '', pill: started ? ['Live', 'live'] : ['Not started', ''], text };
   }
   function renderTracker() {
     if (!LT) return;
     const panel = $('ltPanel'); if (!panel) return;
-    const legs = slipLegs(), games = ltGames(), active = games.filter(ltWindow);
-    if (!legs.length || !active.length) { panel.hidden = true; return; }
+    const preview = IN_CLAUDE && !TEST.on, now = Date.now();
+    // A multi shows while any of its games is live or still to come; the slip alone shows only once its game is near.
+    const ms = ltMultis().map(m => ({ m, gs: mGames(m) })).filter(x => x.gs.length && (x.m.cur ? x.gs.some(ltWindow) : x.gs.some(g => ltWindow(g) || (g.time && startOf(g).getTime() > now))));
+    renderUndo();
+    if (!ms.length) { panel.hidden = !LT.removed; if (LT.removed) { $('ltLegs').innerHTML = ''; $('ltSum').textContent = ''; $('ltNote').textContent = ''; } return; }
     panel.hidden = false;
-    const preview = IN_CLAUDE && !TEST.on;
-    const rows = legs.map(l => {
-      const g = gameOf(l), r = rate(l), B = g && (TEST.on && TEST.ids.includes(g.id) ? testBox(g) : LT.box[g.id]);
-      let ev;
-      if (!g) ev = { st: 'none', text: '', frac: 0 };
-      else if (preview) ev = g.time && startOf(g) <= Date.now() ? { st: 'preview', text: 'Live progress for this leg shows on the website', frac: .4 } : { st: 'wait', text: 'Starts ' + startOf(g).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }), frac: 0 };
-      else if (!B) ev = g.time && startOf(g) > Date.now() ? { st: 'wait', text: 'Starts ' + startOf(g).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }), frac: 0 } : { st: 'wait', text: 'Checking the box score…', frac: 0 };
-      else ev = evalLeg(l, r, B, g);
-      return { l, g, ev };
+    const flash = new Set(); LT.flash = flash;
+    let anyLive = false, nWon = 0, nLost = 0, nLive = 0;
+    const cards = ms.map(({ m, gs }) => {
+      const rows = m.legs.map(l => ltEval(l, m, preview));
+      rows.forEach(x => { const k = m.id + ':' + x.l.id, was = LT.prev[k]; if (was && was !== x.ev.st && (x.ev.st === 'trouble' || x.ev.st === 'lost')) flash.add(k); LT.prev[k] = x.ev.st; });
+      const S = mSummary(rows, preview), live = gs.some(ltWindow);
+      if (live) anyLive = true;
+      if (S.cls === 'won') nWon++; else if (S.cls === 'lost') nLost++; else if (S.pill[1] === 'live') nLive++;
+      if (LT.open[m.id] == null) LT.open[m.id] = ms.length <= 2 || (live && S.cls !== 'lost');
+      const open = !!LT.open[m.id], multiG = gs.length > 1;
+      const sub = (m.cur ? 'Not saved: tap Track this multi to keep it here' : (m.p != null ? 'Leg Room gave it ' + pct(m.p, m.p < .1 ? 1 : 0) : m.legs.length + ' legs'))
+        + (multiG ? ' · ' + gs.length + ' games' : '');
+      const dots = rows.map(x => `<i class="d-${x.ev.st}" title="${esc(title(x.l))}: ${esc(LT_LABEL[x.ev.st] || '')}"></i>`).join('');
+      return `<div class="ltm ${S.cls}"><div class="ltmh"><button type="button" class="ltmt" data-ltm="${esc(m.id)}" aria-expanded="${open}" aria-controls="ltm-${esc(m.id)}"><strong>${esc(m.name)}</strong><span class="ltmst"><span class="ltpill ${S.pill[1]}">${S.pill[0]}</span><span class="chev" aria-hidden="true">▾</span></span><span class="ltmsub">${esc(sub)}</span><span class="ltdots" aria-hidden="true">${dots}</span></button>${m.cur ? '' : `<button type="button" class="x" data-untrack="${esc(m.id)}" aria-label="Stop tracking ${esc(m.name)}">✕</button>`}</div>
+        <div class="ltmb" id="ltm-${esc(m.id)}"${open ? '' : ' hidden'}><p class="ltsum ${S.cls}">${esc(S.text)}</p><ul class="ltlist">${rows.map(x => ltRow(x, multiG, m.id)).join('')}</ul></div></div>`;
     });
-    // Flash a leg the moment it slips into trouble or is lost.
-    const flash = new Set();
-    LT.flash = flash;
-    rows.forEach(x => { const was = LT.prev[x.l.id]; if (was && was !== x.ev.st && (x.ev.st === 'trouble' || x.ev.st === 'lost')) flash.add(x.l.id); LT.prev[x.l.id] = x.ev.st; });
-    const cnt = st => rows.filter(x => x.ev.st === st).length;
-    const lost = rows.filter(x => x.ev.st === 'lost'), all = rows.length;
+    $('ltDot').style.visibility = anyLive ? 'visible' : 'hidden';
+    $('ltTitle').textContent = ms.length === 1 ? (anyLive ? 'Your multi, live' : 'Tracked multi') : (anyLive ? 'Your multis, live' : 'Tracked multis');
     const sum = $('ltSum');
-    sum.className = 'ltsum' + (lost.length ? ' lost' : cnt('landed') === all ? ' won' : '');
-    sum.textContent = preview ? 'Live tracking preview: each leg\'s progress fills in on the website.'
-      : lost.length ? 'Multi lost: ' + lost.map(x => title(x.l)).join(', ') + (lost.length > 1 ? ' fell short.' : ' fell short.')
-      : cnt('landed') === all ? 'Every leg has landed.'
-      : [[cnt('landed'), 'landed'], [cnt('track'), 'on track'], [cnt('behind'), 'behind pace'], [cnt('trouble'), 'in trouble'], [cnt('wait'), 'not started']].filter(x => x[0]).map(x => x[0] + ' ' + x[1]).join(' · ');
-    const multiG = games.length > 1;
-    $('ltLegs').innerHTML = rows.map(x => ltRow(x, multiG)).join('');
-    const ages = active.map(g => LT.box[g.id]).filter(Boolean).map(b => b.at);
-    $('ltNote').textContent = TEST.on ? 'Test preview: made-up box scores, one game minute every 2 seconds.' : preview ? 'This is your multi from below. On the website, each leg updates every 30 seconds during the game.'
-      : LT.err ? 'Couldn\'t reach the live box score just now. Retrying.' : ages.length ? 'Updated ' + new Date(Math.min(...ages)).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '. Refreshes every 30 seconds while games are on.' : '';
-    $('ltRefresh').hidden = preview;
+    sum.className = 'ltsum';
+    sum.textContent = ms.length < 2 ? '' : ms.length + ' multis: ' + [[nLive, 'live'], [nWon, 'won'], [nLost, 'lost'], [ms.length - nLive - nWon - nLost, 'not started']].filter(x => x[0]).map(x => x[0] + ' ' + x[1]).join(' · ') + '.';
+    sum.hidden = !sum.textContent;
+    $('ltLegs').innerHTML = cards.join('');
+    const ages = ltGames().filter(ltWindow).map(g => LT.box[g.id]).filter(Boolean).map(b => b.at);
+    $('ltNote').textContent = TEST.on ? 'Test preview: made-up box scores, one game minute every 2 seconds.' : preview ? 'Track as many multis as you like from "Your multi". On the website, each leg updates every 30 seconds during the game.'
+      : LT.err ? 'Couldn\'t reach the live box score just now. Retrying.' : ages.length ? 'Updated ' + new Date(Math.min(...ages)).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '. Refreshes every 30 seconds while games are on.' : 'Each multi starts updating when its first game tips off.';
+    $('ltRefresh').hidden = preview || !anyLive;
+  }
+  function renderUndo() {
+    const u = $('ltUndo'); if (!u) return;
+    if (!LT.removed) { u.hidden = true; u.innerHTML = ''; return; }
+    u.hidden = false;
+    u.innerHTML = `<span>Stopped tracking ${esc(LT.removed.m.name)}.</span><button type="button" class="btn small" id="ltUndoBtn">Undo</button>`;
   }
   async function pollTracker() {
     if (!LT || IN_CLAUDE) return;
@@ -2839,6 +2950,14 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   if (window.__LR_TEST_SCORES) onScores(window.__LR_TEST_SCORES);
   try { if (/debug/.test(location.search)) window.__LR = { auto: () => AUTO, role: recentRole, fat: fatigueOf, games: gamesList, sim: simulate, joint, rate, evalLeg, parseSummary }; } catch (e) {}
   $('ltRefresh').addEventListener('click', () => { LT.box = {}; pollTracker(); });
+  $('trackBtn').addEventListener('click', trackSlip);
+  $('ltPanel').addEventListener('click', e => {
+    const t = e.target.closest('[data-ltm]');
+    if (t) { const id = t.dataset.ltm, open = t.getAttribute('aria-expanded') !== 'true'; LT.open[id] = open; t.setAttribute('aria-expanded', String(open)); const b = document.getElementById('ltm-' + id); if (b) b.hidden = !open; return; }
+    const x = e.target.closest('[data-untrack]');
+    if (x) { const i = tracked.findIndex(m => m.id === x.dataset.untrack); if (i < 0) return; clearTimeout(LT.undoT); LT.removed = { m: tracked[i], i }; tracked.splice(i, 1); saveTracked(); trackBtnState(); renderTracker(); LT.undoT = setTimeout(() => { LT.removed = null; renderTracker(); }, 8000); return; }
+    if (e.target.closest('#ltUndoBtn') && LT.removed) { clearTimeout(LT.undoT); tracked.splice(Math.min(LT.removed.i, tracked.length), 0, LT.removed.m); LT.removed = null; saveTracked(); trackBtnState(); renderTracker(); }
+  });
   function setTest(on) {
     TEST.on = on; clearInterval(TEST.timer);
     const b = $('testLiveBtn'); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Stop test' : 'Test live preview';
@@ -2847,12 +2966,20 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
       const up = nextSlate().length ? nextSlate() : gamesList().filter(g => g.time && startOf(g) > Date.now());
       TEST.ids = up.slice(0, 3).map(g => g.id);
       // Put a multi in the tracker if yours is empty: the first test game's top legs.
+      // Two demo tracked multis from the other test games, so several multis show at once.
+      TEST.ids.slice(1, 3).forEach((gid, i) => {
+        const g = gamesList().find(x => x.id === gid); if (!g) return;
+        const legs = ratedLegs(l => l.gameId === gid).filter(x => x.r.p >= .45).sort((a, b) => legScore(b) - legScore(a)), seen = {};
+        const pick = legs.filter(x => { const k = nm(x.leg.player || x.leg.type); if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, 3 + i).map(x => Object.assign({}, x.leg, { _proj: x.r.proj, _p: x.r.p }));
+        if (pick.length) tracked.push({ id: 'demo' + i, demo: true, key: 'demo' + i, name: 'Demo: ' + pick.length + '-leg SGM · ' + g.away + ' vs ' + g.home, p: null, legs: pick, games: { [g.id]: { id: g.id, away: g.away, home: g.home, date: g.date, time: g.time } } });
+      });
       if (!slipLegs().length && TEST.ids[0]) { const legs = ratedLegs(l => l.gameId === TEST.ids[0]).filter(x => x.r.p >= .45).sort((a, b) => legScore(b) - legScore(a)); const seen = {}; slip.ids = legs.filter(x => { const k = nm(x.leg.player || x.leg.type); if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, 4).map(x => x.leg.id); slip.mode = 'sgm'; TEST.filled = true; saveSlip(); }
       $('testNote').textContent = 'Running: ' + TEST.ids.map(id => { const g = gamesList().find(x => x.id === id); return g ? g.away + ' vs ' + g.home : ''; }).join(', ') + '. Each game finishes in about a minute; press Stop test to end.' + (TEST.filled ? ' Your multi was empty, so it now holds four legs from the first game to show the tracker.' : '');
       TEST.timer = setInterval(() => { renderGames(); renderTracker(); }, 2000);
     } else {
       if (TEST.filled) { slip.ids = []; saveSlip(); TEST.filled = false; }
-      $('testNote').textContent = 'Fakes three of the next games being played so you can check the live banner, game cards, matchup panel and leg tracker. Scores are made up.';
+      tracked = tracked.filter(m => !m.demo); Object.keys(LT.open).forEach(k => { if (/^demo/.test(k)) delete LT.open[k]; });
+      $('testNote').textContent = 'Fakes three of the next games being played so you can check the live banner, game cards, matchup panel and the multi tracker (with two demo multis). Scores are made up.';
     }
     renderAll(); renderTracker();
   }
