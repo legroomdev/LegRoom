@@ -1,7 +1,7 @@
 """Leg Room data updater. Runs on GitHub Actions and writes JSON files into data/.
 
-python update.py full   -> everything, including team ratings from Basketball Reference
-python update.py quick  -> results, slate, odds, injuries and player averages (skips team ratings)
+Every run refreshes results, team ratings (computed from the stored box scores), slate, odds, injuries
+and player averages. 'full' and 'quick' are kept for the workflow but now behave the same.
 """
 import json, os, re, sys, time, unicodedata, urllib.request, urllib.error
 from datetime import datetime, timedelta, timezone, date
@@ -154,6 +154,7 @@ def box(eid):
     periods = {str(i + 1): {'away': a, 'home': h} for i, (a, h) in enumerate(zip(side['away']['ls'], side['home']['ls']))}
     which = {side['away']['abbr']: 'away', side['home']['abbr']: 'home'}
     players = {'away': [], 'home': []}
+    team = {}
     for tp in (s.get('boxscore') or {}).get('players') or []:
         sd = which.get(std(tp['team']['abbreviation']))
         if not sd or not tp.get('statistics'):
@@ -161,6 +162,7 @@ def box(eid):
         st = tp['statistics'][0]
         names = [str(n).upper() for n in (st.get('names') or st.get('labels') or [])]
         idx = {n: i for i, n in enumerate(names)}
+        team[sd] = team_totals(st, idx)
         for a in st.get('athletes') or []:
             v = a.get('stats') or []
             if a.get('didNotPlay') or not v:
@@ -182,7 +184,34 @@ def box(eid):
             players[sd].append(row)
     d = start.astimezone(ADL).date().isoformat()
     return d, {'id': eid, 'away': side['away']['abbr'], 'home': side['home']['abbr'], 'date': d,
-               'score': {'away': side['away']['score'], 'home': side['home']['score']}, 'periods': periods, 'players': players}
+               'score': {'away': side['away']['score'], 'home': side['home']['score']}, 'periods': periods, 'players': players,
+               'team': team if len(team) == 2 else None}
+
+
+def team_totals(st, idx):
+    """Team box score totals (shooting, free throws, rebounds, turnovers) for possession counts."""
+    tot = st.get('totals') or []
+
+    def pair(k, row):
+        i = idx.get(k)
+        if i is None or i >= len(row):
+            return 0, 0
+        x = str(row[i]).split('-')
+        try:
+            return int(float(x[0])), int(float(x[1])) if len(x) > 1 else 0
+        except Exception:  # noqa: BLE001
+            return 0, 0
+
+    def one(k, row):
+        return pair(k, row)[0]
+    rows = [tot] if tot and any(str(x).strip() for x in tot) else [a.get('stats') or [] for a in st.get('athletes') or [] if not a.get('didNotPlay')]
+    out = {'fgm': 0, 'fga': 0, 'tpm': 0, 'ftm': 0, 'fta': 0, 'orb': 0, 'reb': 0, 'ast': 0, 'tov': 0, 'pts': 0}
+    for row in rows:
+        fgm, fga = pair('FG', row); tpm, _ = pair('3PT', row); ftm, fta = pair('FT', row)
+        out['fgm'] += fgm; out['fga'] += fga; out['tpm'] += tpm; out['ftm'] += ftm; out['fta'] += fta
+        out['orb'] += one('OREB', row); out['reb'] += one('REB', row); out['ast'] += one('AST', row)
+        out['tov'] += one('TO', row); out['pts'] += one('PTS', row)
+    return out
 
 
 def update_results(results, now):
@@ -221,8 +250,23 @@ def update_results(results, now):
             added += 1
             time.sleep(0.25)
         d += timedelta(days=1)
+    # One-off backfill: earlier games were stored without team totals.
+    refetched = 0
+    for dd in sorted(results):
+        for g in list(results[dd].get('games', [])):
+            if g.get('team') or not g.get('id') or refetched >= 250:
+                continue
+            try:
+                _, g2 = box(g['id'])
+                if g2.get('team'):
+                    g['team'] = g2['team']
+                    refetched += 1
+                time.sleep(0.2)
+            except Exception as e:  # noqa: BLE001
+                print('team totals failed', g.get('id'), e)
+                fails += 1
     total = sum(len(r.get('games', [])) for r in results.values())
-    log('results', f'ok: {added} new games, {total} stored' + (f', {fails} fetches failed' if fails else ''))
+    log('results', f'ok: {added} new games, {total} stored' + (f', team totals added to {refetched}' if refetched else '') + (f', {fails} fetches failed' if fails else ''))
     return results
 
 
@@ -409,56 +453,54 @@ def build_slate(results, players, inj, old, now):
     return games
 
 
-# ---------- team ratings ----------
-def strip(s):
-    return re.sub(r'<[^>]+>', '', s).replace('&nbsp;', ' ').replace('*', '').strip()
+# ---------- team ratings (from our own box scores) ----------
+def possessions(t):
+    return t['fga'] - t['orb'] + t['tov'] + 0.44 * t['fta']
 
 
-def br_table(html, tid):
-    m = re.search(r'<table[^>]*id="' + re.escape(tid) + r'"[^>]*>(.*?)</table>', html, re.S)
-    if not m:
-        return {}
-    out = {}
-    for row in re.findall(r'<tr[^>]*>(.*?)</tr>', m.group(1), re.S):
-        cells = dict((k, strip(v)) for k, v in re.findall(r'<t[dh][^>]*data-stat="([^"]+)"[^>]*>(.*?)</t[dh]>', row, re.S))
-        name = cells.get('team') or cells.get('team_name')
-        ab = team_from_name(name) if name else None
-        if ab:
-            out[ab] = cells
-    return out
-
-
-def team_ratings(old):
-    try:
-        html = fetch(f'https://www.basketball-reference.com/leagues/NBA_{SEASON_YEAR}.html', as_json=False)
-        html = html.replace('<!--', '').replace('-->', '')
-        adv = br_table(html, 'advanced-team')
-        pg = br_table(html, 'per_game-team')
-        opp = br_table(html, 'per_game-opponent')
-
-        def f(d, *keys):
-            for k in keys:
-                if d.get(k) not in (None, ''):
-                    try:
-                        return float(d[k])
-                    except Exception:  # noqa: BLE001
-                        pass
-            return None
-        teams = {}
-        for ab in TEAMS:
-            a, p, o = adv.get(ab, {}), pg.get(ab, {}), opp.get(ab, {})
-            t = {'g': f(p, 'g') or f(a, 'g'), 'pace': f(a, 'pace'), 'ortg': f(a, 'off_rtg'), 'drtg': f(a, 'def_rtg'),
-                 'fg': f(p, 'fg'), 'fga': f(p, 'fga'), 'opp_pts': f(o, 'opp_pts', 'pts'), 'opp_reb': f(o, 'opp_trb', 'trb'),
-                 'opp_ast': f(o, 'opp_ast', 'ast'), 'opp_thr': f(o, 'opp_fg3', 'fg3')}
-            if t['pace'] and t['ortg'] and t['drtg']:
-                teams[ab] = t
-        if len(teams) < 25:
-            raise RuntimeError(f'only {len(teams)} teams parsed')
-        log('teams', f'ok: {len(teams)} teams from Basketball Reference')
-        return {'asOf': datetime.now(ADL).strftime('%-d %b'), 'source': 'Basketball Reference', 'teams': teams}
-    except Exception as e:  # noqa: BLE001
-        log('teams', f'kept previous ratings ({e})')
+def team_ratings(results, old):
+    """Pace, offensive and defensive rating and opponent averages, computed the standard way from box scores."""
+    agg = {}
+    for d in results:
+        for g in results[d].get('games', []):
+            tm = g.get('team') or {}
+            if not tm.get('away') or not tm.get('home'):
+                continue
+            mins = 48 + 5 * max(0, len(g.get('periods') or {}) - 4)
+            poss = (possessions(tm['away']) + possessions(tm['home'])) / 2
+            if poss <= 50:
+                continue
+            for sd, op in (('away', 'home'), ('home', 'away')):
+                ab, me, them = g[sd], tm[sd], tm[op]
+                a = agg.setdefault(ab, {'g': 0, 'poss': 0, 'mins': 0, 'pts': 0, 'opp_pts': 0, 'fg': 0, 'fga': 0, 'opp_reb': 0, 'opp_ast': 0, 'opp_thr': 0})
+                a['g'] += 1; a['poss'] += poss; a['mins'] += mins
+                a['pts'] += g['score'][sd]; a['opp_pts'] += g['score'][op]
+                a['fg'] += me['fgm']; a['fga'] += me['fga']
+                a['opp_reb'] += them['reb']; a['opp_ast'] += them['ast']; a['opp_thr'] += them['tpm']
+    teams = {}
+    for ab, a in agg.items():
+        if a['g'] < 1 or a['poss'] <= 0:
+            continue
+        n = a['g']
+        teams[ab] = {'g': n, 'pace': round(48 * a['poss'] / a['mins'], 1) if a['mins'] else None,
+                     'ortg': round(100 * a['pts'] / a['poss'], 1), 'drtg': round(100 * a['opp_pts'] / a['poss'], 1),
+                     'fg': round(a['fg'] / n, 1), 'fga': round(a['fga'] / n, 1), 'opp_pts': round(a['opp_pts'] / n, 1),
+                     'opp_reb': round(a['opp_reb'] / n, 1), 'opp_ast': round(a['opp_ast'] / n, 1), 'opp_thr': round(a['opp_thr'] / n, 1)}
+    if len(teams) < 25:
+        log('teams', f'kept previous ratings (only {len(teams)} teams have box score totals yet)')
         return old
+    # Side-by-side check against the previous ratings (the last Basketball Reference pull) the first time.
+    if old and old.get('source') == 'Basketball Reference':
+        diffs = {k: [] for k in ('pace', 'ortg', 'drtg')}
+        for ab, t in teams.items():
+            o = (old.get('teams') or {}).get(ab) or {}
+            for k in diffs:
+                if o.get(k) and t.get(k):
+                    diffs[k].append(abs(o[k] - t[k]))
+        STATUS['ratingsVsBR'] = {k: {'meanDiff': round(sum(v) / len(v), 2), 'maxDiff': round(max(v), 2)} for k, v in diffs.items() if v}
+        STATUS['ratingsBRSnapshot'] = old.get('teams')
+    log('teams', f'ok: {len(teams)} teams from our box scores')
+    return {'asOf': datetime.now(ADL).strftime('%-d %b'), 'source': 'Leg Room box scores', 'teams': teams}
 
 
 def live_check():
@@ -488,11 +530,7 @@ def main():
         log('results', f'failed: {e}')
 
     teams_old = load('teams.json', None) or seed.get('teams')
-    if mode == 'full' or not teams_old:
-        teams = team_ratings(teams_old)
-    else:
-        teams = teams_old
-        STATUS['steps']['teams'] = 'unchanged (refreshed each morning)'
+    teams = team_ratings(results, teams_old)
     if teams:
         save('teams.json', teams)
 
@@ -521,4 +559,3 @@ SEED_JSON = r'''{"teams":{"asOf":"6 Nov","source":"Basketball Reference","teams"
 
 if __name__ == '__main__':
     main()
-
