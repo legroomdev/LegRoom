@@ -10,7 +10,7 @@
 <title>Leg Room NBA Multis</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: a betting slip workflow. Slate of games, a pool of rated legs, then the slip and auto-builder. */
 :root {
@@ -30,12 +30,12 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0d111a; --surface: #161c29; --ink: #e8ecf4; --muted: #95a1b6; --line: #273044;
+    --prog: #4a8cff; --bg: #0d111a; --surface: #161c29; --ink: #e8ecf4; --muted: #95a1b6; --line: #273044;
     --accent: #ff874a; --accent-ink: #1a0d05; --good: #4dc684; --warn: #e4b04c; --bad: #ff7a6a; --wood: #9c6a38; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0d111a; --surface: #161c29; --ink: #e8ecf4; --muted: #95a1b6; --line: #273044;
+  --prog: #4a8cff; --bg: #0d111a; --surface: #161c29; --ink: #e8ecf4; --muted: #95a1b6; --line: #273044;
   --accent: #ff874a; --accent-ink: #1a0d05; --good: #4dc684; --warn: #e4b04c; --bad: #ff7a6a; --wood: #9c6a38; color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -102,6 +102,39 @@ details.form form { margin-top: 12px; }
 .live .ph { display: inline-block; min-width: 1.6em; height: .9em; border-radius: 4px; background: color-mix(in srgb, var(--muted) 30%, transparent); vertical-align: -1px; margin: 0 2px; }
 @media (prefers-reduced-motion: no-preference) { .live .ph { animation: phfade 1.6s ease-in-out infinite; } }
 @keyframes phfade { 50% { opacity: .45; } }
+.ltrack h2 { display: flex; align-items: center; gap: 10px; }
+.ltsum { margin: 0 0 10px; font-weight: 600; }
+.ltsum.lost { color: var(--bad); } .ltsum.won { color: var(--good); }
+.ltlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ltlist li { display: grid; grid-template-columns: 32px minmax(0, 1fr); column-gap: 12px; align-items: start; padding: 12px 2px 14px; border-bottom: 1px solid var(--line); min-width: 0; }
+.ltlist li:last-child { border-bottom: 0; }
+.ltlist .jersey { width: 32px; height: 32px; flex: none; align-self: start; margin-top: 2px; overflow: visible; }
+.ltlist .ltb { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ltlist .ltb strong { color: var(--ink); font-size: .95rem; line-height: 1.2; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+.ltlist .ltb strong .tbadge { font-size: .64rem; padding: 1px 5px 2px; min-width: 2.4em; }
+.ltlist .ltdesc { color: var(--muted); font-size: .85rem; }
+.ltlist .ltmeta { color: var(--muted); font-size: .74rem; margin-top: 4px; }
+.ltrow { display: flex; align-items: center; gap: 12px; margin-top: 8px; min-width: 0; }
+.ltrow .ltrail { flex: 1; margin-top: 0; }
+.ltst { flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; white-space: nowrap; color: var(--muted); }
+.ltst .ic { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: currentColor; }
+.ltst .ic b { color: var(--surface); font-size: .62rem; font-weight: 800; line-height: 1; }
+/* progress track with the current value riding the bar and the target at the end */
+.ltrail { position: relative; height: 22px; margin-right: 14px; max-width: 280px; }
+.ltrail .tr { position: absolute; left: 0; right: 0; top: 8px; height: 6px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 22%, transparent); }
+.ltrail .fl { position: absolute; left: 0; top: 8px; height: 6px; border-radius: 99px; background: var(--prog); transition: width .5s ease; }
+.ltrail .pv, .ltrail .tg { position: absolute; top: 0; transform: translateX(-50%); min-width: 26px; height: 22px; padding: 0 7px; border-radius: 99px; display: grid; place-items: center; font-family: var(--mono); font-weight: 700; font-size: .78rem; transition: left .5s ease; }
+.ltrail .pv { background: var(--prog); color: #fff; z-index: 2; }
+.ltrail .tg { left: 100%; background: color-mix(in srgb, var(--prog) 14%, var(--surface)); color: color-mix(in srgb, var(--prog) 70%, var(--ink)); border: 1px solid color-mix(in srgb, var(--prog) 25%, var(--line)); }
+.ltrail.done .fl, .ltrail.done .pv { background: var(--good); }
+.ltrail.done .tg { display: none; }
+.ltrail.skel .fl { width: 40% !important; background: var(--muted); opacity: .35; }
+.lt-landed .ltst { color: var(--good); } .lt-track .ltst { color: var(--good); } .lt-behind .ltst { color: var(--warn); } .lt-trouble .ltst, .lt-lost .ltst { color: var(--bad); }
+.lt-lost .ltrail .fl, .lt-lost .ltrail .pv { background: color-mix(in srgb, var(--prog) 75%, var(--muted)); }
+.lt-trouble .ltrail .fl, .lt-trouble .ltrail .pv { background: var(--bad); } .lt-behind .ltrail .fl, .lt-behind .ltrail .pv { background: var(--warn); }
+@media (prefers-reduced-motion: no-preference) { .ltlist li.lt-preview .ltbar i { animation: phfade 1.6s ease-in-out infinite; } }
+@keyframes ltflash { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--bad) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+.ltlist li.flash { animation: ltflash 1.2s ease-out 3; }
 .livebar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; font-size: .85rem; color: var(--muted); margin: 0 0 12px; }
 .livebar #liveMsg { flex: 1 1 180px; min-width: 0; }
 .livebar.off .dotlive { background: var(--muted); animation: none; }
@@ -173,6 +206,10 @@ details.form form { margin-top: 12px; }
 .stepper input { flex: 0 0 60px; width: 60px; text-align: center; font-family: var(--display); font-size: 1.5rem; font-weight: 800; padding: 6px 2px; }
 .steprange { display: block; margin-top: 6px; }
 .seg3 { grid-template-columns: repeat(3, 1fr); }
+.hrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.themeseg { grid-template-columns: repeat(3, auto); padding: 3px; gap: 2px; background: var(--surface); border: 1px solid var(--line); }
+.themeseg button { padding: 6px 10px; font-size: .8rem; display: inline-flex; align-items: center; gap: 4px; }
+.themeseg button[aria-pressed="true"] { background: var(--bg); }
 .seg3 button { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
 .seg3 button small { font-weight: 500; font-size: .72rem; }
 .tierbtns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -230,6 +267,139 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   .result { grid-template-columns: 1fr 1fr; }
   .result .stat:first-child { grid-column: 1 / -1; }
 }
+/* ---- layout: one column on phones (original order), two columns on desktop ---- */
+.cols, .colMain, .colSide { display: contents; }
+.o-lt { order: 1; } .o-best { order: 2; } .o-track { order: 3; } .o-slate { order: 4; } .o-pool { order: 5; } .o-slip { order: 6; } .o-build { order: 7; } .o-set { order: 8; } .o-foot { order: 9; }
+.mboard, .mhero { display: none; }
+h1 .stop, .mb-title .stop { color: var(--accent); }
+:root { --prog: #1f63c6; --gold: #f5c451; --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; --night: #0b0d18; }
+
+@media (min-width: 1100px) {
+  body { padding-block: 0 44px; }
+  .wrap { max-width: 1340px; gap: 22px; }
+  header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 18px; padding-block: 16px; border-bottom: 1px solid var(--line); }
+  header .hrow { display: contents; }
+  header h1 { grid-column: 1; grid-row: 1; font-size: 2.1rem; }
+  header .label { grid-column: 2; grid-row: 1; font-family: var(--mono); letter-spacing: .12em; }
+  header .themeseg { grid-column: 3; grid-row: 1; }
+  header .lede, .boards { display: none; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 26px; align-items: start; }
+  .colMain, .colSide { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .colSide { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; scrollbar-width: thin; padding: 2px 2px 8px; }
+  .colMain > * { order: 5; } .colMain > .mboard { order: 0; } .colMain > .o-best { order: 1; } .colMain > .o-build { order: 2; } .colMain > .o-track { order: 3; } .colMain > .o-pool { order: 4; } .colMain > .o-slate { order: 6; } .colMain > .o-set { order: 7; } .colMain > .o-foot { order: 8; }
+  .colSide > * { flex-shrink: 0; }
+  .colSide > .mhero { order: 0; } .colSide > .o-lt { order: 1; } .colSide > .o-slip { order: 2; }
+  .mboard { display: flex; flex-direction: column; gap: 10px; }
+  .mhero { display: flex; padding: 0; overflow: hidden; gap: 0; }
+}
+
+.devbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 12px; border: 1px dashed var(--accent); border-radius: 12px; }
+.devbar[hidden] { display: none; }
+.devbar .help { flex: 1 1 260px; min-width: 0; }
+#testLiveBtn[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); color: #fff; }
+/* live banner: every game in progress, across the top */
+.livebanner { display: flex; align-items: stretch; gap: 12px; padding: 10px; border-radius: 14px; color: #fff; overflow: hidden;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 1px, transparent 1px 24px), linear-gradient(90deg, #2a0d12 0%, var(--night) 55%); border: 1px solid color-mix(in srgb, var(--bad) 45%, transparent); }
+.livebanner[hidden] { display: none; }
+.lb-tag { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 6px; font-family: var(--mono); font-weight: 700; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #ff8a7a; }
+.lb-games { display: flex; gap: 10px; overflow-x: auto; min-width: 0; flex: 1; scrollbar-width: thin; padding-bottom: 2px; }
+.lbg { all: unset; box-sizing: border-box; cursor: pointer; flex: none; display: grid; grid-template-columns: auto auto auto; align-items: center; column-gap: 12px; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 1px, transparent 1px 20px), linear-gradient(135deg, color-mix(in srgb, var(--c1) 70%, var(--night)) 0%, color-mix(in srgb, var(--c2) 60%, var(--night)) 100%); }
+.lbg:hover { border-color: rgba(255,255,255,.4); } .lbg:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.lbg .lb-t { font-family: var(--display); font-weight: 900; font-size: 1.35rem; line-height: 1; text-transform: uppercase; }
+.lbg .lb-s { font-family: var(--mono); font-weight: 700; font-size: 1.25rem; color: var(--gold); white-space: nowrap; }
+.lbg .lb-s .ph { background: rgba(255,255,255,.25); }
+.lbg .lb-c { grid-column: 1 / -1; font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; opacity: .85; margin-top: 3px; }
+@media (max-width: 600px) { .livebanner { flex-direction: column; gap: 8px; } .lb-tag { padding: 0 2px; } .lb-games { flex-direction: column; overflow: visible; } .lbg { grid-template-columns: 1fr auto 1fr; } .lbg .lb-h { text-align: right; } }
+
+/* matchup board */
+.mb-eyebrow, .mh-eyebrow, .mc-time, .mc-meta, .mh-stats span, .mb-day { font-family: var(--mono); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+.mb-eyebrow { font-size: .72rem; color: var(--muted); }
+.mb-title { font-size: 3.8rem; font-weight: 900; text-transform: uppercase; line-height: .9; letter-spacing: 0; }
+.mb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.mb-nav { display: flex; gap: 6px; }
+.mb-nav .btn { font-family: var(--mono); font-weight: 700; min-width: 40px; }
+.mb-grid { display: flex; gap: 12px; margin-top: 6px; overflow-x: auto; overscroll-behavior-x: contain; scroll-padding-inline: 2px; padding: 6px 2px 12px; scrollbar-width: thin;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); }
+.mb-grid:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mb-grid .mcard { flex: 0 0 236px; scroll-snap-align: start; }
+@media (pointer: coarse) { .mb-grid { scroll-snap-type: x proximity; } }
+.mb-day { flex: none; align-self: stretch; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; transform: rotate(180deg); font-size: .66rem; color: var(--muted); padding: 0 2px; border-left: 1px dashed var(--line); }
+.mb-grid > .mb-day:first-child { border-left: 0; }
+.mcard { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 4px; padding: 14px 14px 12px; min-height: 124px; border-radius: 12px; color: #fff; position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.14);
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.055) 0 1px, transparent 1px 24px),
+              linear-gradient(135deg, color-mix(in srgb, var(--c1) 72%, var(--night)) 0%, color-mix(in srgb, var(--c2) 62%, var(--night)) 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s ease, box-shadow .15s ease; }
+.mcard:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,.28); }
+.mcard:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.mcard.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px color-mix(in srgb, var(--c1) 80%, #000), 0 10px 26px rgba(0,0,0,.3); }
+.mcard.done { opacity: .62; }
+.mc-time { font-size: .7rem; opacity: .9; display: flex; align-items: center; gap: 6px; }
+.mc-live { color: #fff; display: inline-flex; align-items: center; gap: 6px; } .mc-final { opacity: .85; }
+.mc-teams { font-family: var(--display); font-weight: 900; font-size: 2.45rem; line-height: .95; letter-spacing: .005em; text-transform: uppercase; }
+.mc-teams i { font-style: normal; opacity: .75; font-weight: 800; padding: 0 2px; }
+.mc-names { font-size: .85rem; opacity: .88; }
+.mc-meta { font-size: .66rem; opacity: .78; margin-top: auto; padding-top: 6px; }
+
+/* selected matchup */
+.mh-top { position: relative; padding: 18px 18px 16px; color: #fff; display: flex; flex-direction: column; gap: 8px;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 1px, transparent 1px 26px),
+              linear-gradient(135deg, color-mix(in srgb, var(--c1) 70%, var(--night)) 0%, color-mix(in srgb, var(--c2) 58%, var(--night)) 100%); }
+.mh-eyebrow { font-size: .7rem; opacity: .9; display: flex; align-items: center; gap: 6px; }
+.mh-name { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: 3.4rem; line-height: .86; margin: 0; overflow-wrap: anywhere; }
+.mh-name .mh-vs { font-family: var(--display); font-style: italic; font-weight: 800; color: var(--gold); font-size: .55em; margin-right: 8px; vertical-align: .18em; }
+.mh-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; background: rgba(8,10,20,.72); border-radius: 9px; padding: 11px 14px; margin-top: 6px; }
+.mh-stats div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mh-stats span { font-size: .62rem; opacity: .8; }
+.mh-stats b { font-family: var(--mono); font-size: 1.15rem; color: var(--gold); font-weight: 700; }
+.mh-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.mh-body h3 { margin: 0; font-size: 1.05rem; }
+.mh-legs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.mh-legs li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); }
+.mh-legs li div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mh-legs li small { color: var(--muted); font-size: .78rem; }
+.mh-legs b { font-family: var(--mono); color: var(--accent); font-size: .9rem; }
+.mh-add { min-width: 38px; font-weight: 800; }
+.mh-add[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: var(--surface); }
+.mh-sgm { display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--line); padding-top: 12px; }
+.mh-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mh-tiers .btn { font-family: var(--display); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; border-width: 2px; }
+.mh-tiers .safe { color: var(--good); border-color: var(--good); } .mh-tiers .med { color: var(--warn); border-color: var(--warn); } .mh-tiers .high { color: var(--bad); border-color: var(--bad); }
+.mh-news summary { cursor: pointer; font-weight: 600; }
+.mh-news[open] summary { margin-bottom: 8px; }
+/* ---- board style for the building panels: mono labels, big titles, striped risk cards ---- */
+.label { font-family: var(--mono); font-weight: 700; letter-spacing: .1em; font-size: .68rem; }
+.ptitle { display: flex; flex-direction: column; gap: 4px; }
+.bigtitle { font-size: 2.3rem; font-weight: 900; line-height: .92; letter-spacing: 0; }
+.bigtitle .stop { color: var(--accent); }
+#buildh { font-size: 2.3rem; font-weight: 900; line-height: .92; }
+#buildh::after, #sliph::after { content: "."; color: var(--accent); }
+.panel.best { border-color: var(--line); background:
+  repeating-linear-gradient(115deg, color-mix(in srgb, var(--ink) 3%, transparent) 0 1px, transparent 1px 26px), var(--surface); }
+.seg { background: var(--bg); border: 1px solid var(--line); }
+.seg button { font-family: var(--mono); font-size: .76rem; text-transform: uppercase; letter-spacing: .08em; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent), 0 1px 2px rgba(0,0,0,.12); }
+.stepper .btn { font-family: var(--mono); font-size: .9rem; font-weight: 700; background: var(--bg); }
+.stepper .btn.sm { font-size: .8rem; }
+.stepper .btn:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+.stepper input { background: var(--night); color: var(--gold); border-color: var(--night); font-family: var(--mono); font-size: 1.35rem; font-weight: 700; text-align: center; padding: 6px 0; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+.steprange { font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; }
+.tierbtns { gap: 10px; }
+.tb, .tbx { --t: var(--muted); position: relative; overflow: hidden; align-items: flex-start; text-align: left; padding: 14px 14px 12px; gap: 8px; min-height: 92px; border: 1px solid color-mix(in srgb, var(--t) 55%, var(--line)); color: var(--t);
+  background: repeating-linear-gradient(115deg, color-mix(in srgb, var(--t) 10%, transparent) 0 1px, transparent 1px 22px),
+              linear-gradient(135deg, color-mix(in srgb, var(--t) 18%, var(--surface)) 0%, color-mix(in srgb, var(--t) 5%, var(--surface)) 100%);
+  transition: transform .15s ease, box-shadow .15s ease; }
+.tb.safe, .tbx.safe { --t: var(--good); } .tb.med, .tbx.med { --t: var(--warn); } .tb.high, .tbx.high { --t: var(--bad); }
+.tb.safe, .tbx.safe, .tb.med, .tbx.med, .tb.high, .tbx.high { border-color: color-mix(in srgb, var(--t) 55%, var(--line)); color: var(--t); }
+.tb span, .tbx span { font-size: 1.6rem; font-weight: 900; line-height: .95; }
+.tb .rec, .tbx .rec { font-family: var(--mono); font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: 1; color: var(--muted); }
+.tb:hover, .tbx:hover { transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in srgb, var(--t) 22%, transparent); }
+.tb[aria-pressed="true"], .tbx[aria-pressed="true"], .tbx[aria-pressed="true"].safe, .tbx[aria-pressed="true"].med, .tbx[aria-pressed="true"].high { color: #fff; border-color: var(--t);
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.08) 0 1px, transparent 1px 22px), linear-gradient(135deg, var(--t) 0%, color-mix(in srgb, var(--t) 60%, var(--night)) 100%); }
+.tb[aria-pressed="true"] .rec, .tbx[aria-pressed="true"] .rec { color: rgba(255,255,255,.85); }
+@media (max-width: 480px) { .tb span, .tbx span { font-size: 1.25rem; } .tb, .tbx { padding: 12px 10px 10px; min-height: 84px; } .bigtitle, #buildh { font-size: 2rem; } }
 </style>
 </head>
 <body>
@@ -237,14 +407,32 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
 
 <div class="wrap">
   <header>
-    <div class="label">NBA multi builder</div>
-    <h1>Leg Room</h1>
+    <div class="hrow"><div class="label">NBA multi builder</div>
+      <div class="seg themeseg" role="group" aria-label="Colour theme">
+        <button type="button" data-themeopt="auto" aria-pressed="true" title="Match your device">Auto</button>
+        <button type="button" data-themeopt="light" aria-pressed="false"><span aria-hidden="true">☀</span> Light</button>
+        <button type="button" data-themeopt="dark" aria-pressed="false"><span aria-hidden="true">☾</span> Dark</button>
+      </div></div>
+    <h1>Leg Room<span class="stop">.</span></h1>
     <p class="lede">Load tonight's games and the legs you're eyeing. Leg Room rates how likely each leg is to land on form, pace, injuries and schedule spot, and works out the chance your Same Game Multi or multi-game multi comes in.</p>
   </header>
   <div class="boards" aria-hidden="true"></div>
+  <div class="devbar" id="devBar" hidden><span class="label">Development copy</span><button type="button" class="btn small" id="testLiveBtn" aria-pressed="false">Test live preview</button><span class="help" id="testNote">Fakes three of the next games being played so you can check the live banner, game cards, matchup panel and leg tracker. Scores are made up.</span></div>
 
-  <section class="panel best" aria-labelledby="besth">
-    <div class="phead"><h2 id="besth">Today's best</h2></div>
+  <section class="livebanner" id="liveBanner" aria-label="Games on now" hidden>
+    <div class="lb-tag"><span class="dotlive" aria-hidden="true"></span>Live now</div>
+    <div class="lb-games" id="lbGames"></div>
+  </section>
+  <div class="cols">
+  <div class="colMain">
+  <section class="mboard" id="mboard" aria-labelledby="mbh">
+    <div class="mb-eyebrow">The matchup board</div>
+    <div class="mb-head"><h2 id="mbh" class="mb-title">Upcoming games<span class="stop">.</span></h2>
+      <div class="mb-nav"><button type="button" class="btn small" data-mbscroll="-1" aria-label="Scroll games left">←</button><button type="button" class="btn small" data-mbscroll="1" aria-label="Scroll games right">→</button></div></div>
+    <div class="mb-grid" id="mbGrid" tabindex="0" aria-label="Upcoming games, scroll sideways"></div>
+  </section>
+  <section class="o-best panel best" aria-labelledby="besth">
+    <div class="ptitle"><div class="mb-eyebrow">Next slate · every game that hasn't started</div><h2 id="besth" class="bigtitle">Today's best<span class="stop">.</span></h2></div>
     <p class="help">The strongest multi on the next slate, across every game that hasn't started.</p>
     <div class="seg" role="group" aria-label="Best of">
       <button type="button" data-bkind="sgm" aria-pressed="true">Best SGM</button>
@@ -264,48 +452,45 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       <div class="mustrow"><input type="text" class="mustP" id="mustB" list="allPlayers" placeholder="Player name, e.g. Curry" autocomplete="off"><button class="btn small" type="button" data-clearmust>Clear</button></div></div>
     <span class="label">Risk level</span>
     <div class="tierbtns">
-      <button class="btn tb2 tbx safe" type="button" data-btier="safe"><span>Safe</span><small class="rec">Recommended<br>3–8 legs</small></button>
-      <button class="btn tb2 tbx med" type="button" data-btier="med"><span>Medium</span><small class="rec">Recommended<br>3–6 legs</small></button>
-      <button class="btn tb2 tbx high" type="button" data-btier="high"><span>High risk</span><small class="rec">Recommended<br>3–5 legs</small></button>
+      <button class="btn tb2 tbx safe" type="button" data-btier="safe"><span>Safe</span><small class="rec">Rec. 3–8 legs</small></button>
+      <button class="btn tb2 tbx med" type="button" data-btier="med"><span>Medium</span><small class="rec">Rec. 3–6 legs</small></button>
+      <button class="btn tb2 tbx high" type="button" data-btier="high"><span>High risk</span><small class="rec">Rec. 3–5 legs</small></button>
     </div>
     <div class="games" id="best"></div>
   </section>
-
-  <section class="panel" aria-labelledby="trackh">
+  <section class="o-build panel" aria-labelledby="buildh">
+    <h2 id="buildh">Build it for me</h2>
+    <p class="help">Choose how many legs and a risk level, and Leg Room builds the multi with the reasons behind every leg. Risk sets how hard each leg is. Games that have started are left out. SGM mode uses one game; multi-game mode takes the strongest leg from each game. Trap spots and luck markets are left out.</p>
+    <div class="grid2">
+      <div class="field full" id="sugGameF"><label class="label" for="sugGame">Game</label><select id="sugGame"></select></div>
+    </div>
+    <div class="field"><span class="label" id="legsLblS">Number of legs</span>
+      <div class="stepper" role="group" aria-labelledby="legsLblS">
+        <button type="button" class="btn sm" data-step="-10" aria-label="10 fewer legs">−10</button>
+        <button type="button" class="btn sm" data-step="-5" aria-label="5 fewer legs">−5</button>
+        <button type="button" class="btn" data-step="-1" aria-label="1 fewer leg">−1</button>
+        <input type="number" class="legsN" id="legsNS" min="2" max="20" inputmode="numeric" aria-label="Number of legs">
+        <button type="button" class="btn" data-step="1" aria-label="1 more leg">+1</button>
+        <button type="button" class="btn sm" data-step="5" aria-label="5 more legs">+5</button>
+        <button type="button" class="btn sm" data-step="10" aria-label="10 more legs">+10</button>
+      </div><span class="help steprange">2 to 20 legs, the most Sportsbet allows</span></div>
+    <div class="field"><label class="label" for="mustS">Must include (optional)</label>
+      <div class="mustrow"><input type="text" class="mustP" id="mustS" list="allPlayers" placeholder="Player name, e.g. Curry" autocomplete="off"><button class="btn small" type="button" data-clearmust>Clear</button></div></div>
+    <datalist id="allPlayers"></datalist>
+    <span class="label">Risk level</span>
+    <div class="tierbtns">
+      <button class="btn tb safe" type="button" data-tier="safe"><span>Safe</span><small class="rec">Rec. 3–8 legs</small></button>
+      <button class="btn tb med" type="button" data-tier="med"><span>Medium</span><small class="rec">Rec. 3–6 legs</small></button>
+      <button class="btn tb high" type="button" data-tier="high"><span>High risk</span><small class="rec">Rec. 3–5 legs</small></button>
+    </div>
+    <div class="games" id="sugs"></div>
+  </section>
+  <section class="o-track panel" aria-labelledby="trackh">
     <div class="phead"><h2 id="trackh">Track record</h2><button class="btn small" type="button" id="trackToggle" aria-expanded="false" aria-controls="trackBody">Show</button></div>
     <p class="help" id="trackSummary">Every multi Leg Room builds is saved and checked against the box scores the next morning.</p>
     <div id="trackBody" class="poolbody" hidden></div>
   </section>
-
-  <section class="panel" aria-labelledby="slateh">
-    <div class="phead"><h2 id="slateh">Slate</h2><button class="btn small" type="button" id="prunePast">Remove past games</button></div>
-    <div class="note" id="exampleNote" hidden><span>Showing an example slate with made-up players and lines. Add a game or use Quick fill to start your own.</span><button class="btn small" type="button" id="hideExample">Hide example</button></div>
-    <p class="help" id="schedNote"></p>
-    <div class="livebar" id="liveBar" hidden><span class="dotlive" aria-hidden="true"></span><span id="liveMsg" role="status"></span><button class="btn small" type="button" id="liveBtn" hidden>Load live scores</button></div>
-    <div class="games" id="games"></div>
-    <details class="form" id="gameD">
-      <summary id="gameSum">Add a game</summary>
-      <form id="gameForm" class="grid2" autocomplete="off">
-        <input type="hidden" id="gId">
-        <div class="field"><label class="label" for="gAway">Away team</label><select id="gAway" required></select></div>
-        <div class="field"><label class="label" for="gHome">Home team</label><select id="gHome" required></select></div>
-        <div class="field"><label class="label" for="gDate">Date (Adelaide)</label><input type="date" id="gDate" required></div>
-        <div class="field"><label class="label" for="gTime">Tip-off</label><input type="time" id="gTime"></div>
-        <div class="field"><label class="label" for="gTotal">Game total line</label><input type="number" id="gTotal" step="0.5" inputmode="decimal" placeholder="226.5"></div>
-        <div class="field"><label class="label" for="gLine">Home line</label><input type="number" id="gLine" step="0.5" inputmode="decimal" placeholder="-4.5"></div>
-        <div class="field"><label class="label" for="gPaceA">Away pace</label><input type="number" id="gPaceA" step="0.1" inputmode="decimal" placeholder="Possessions per 48"></div>
-        <div class="field"><label class="label" for="gPaceH">Home pace</label><input type="number" id="gPaceH" step="0.1" inputmode="decimal" placeholder="Possessions per 48"></div>
-        <label class="check"><input type="checkbox" id="gB2BA"> Away on 2nd night of B2B</label>
-        <label class="check"><input type="checkbox" id="gB2BH"> Home on 2nd night of B2B</label>
-        <div class="field"><label class="label" for="gSpotA">Away spot</label><select id="gSpotA"></select></div>
-        <div class="field"><label class="label" for="gSpotH">Home spot</label><select id="gSpotH"></select></div>
-        <p class="help full">Home line is the home team's handicap, negative when they're favourites. Pace is optional; leave it blank to use league average.</p>
-        <div class="btns full"><button class="btn primary" type="submit" id="gSubmit">Add game</button><button class="btn" type="button" id="gCancel" hidden>Cancel edit</button></div>
-      </form>
-    </details>
-  </section>
-
-  <section class="panel" aria-labelledby="poolh">
+  <section class="o-pool panel" aria-labelledby="poolh">
     <div class="phead"><h2 id="poolh">Leg pool</h2><button class="btn small" type="button" id="poolToggle" aria-expanded="false" aria-controls="poolBody"><span id="poolCount"></span> Show</button></div>
     <div id="poolBody" class="poolbody" hidden>
     <p class="help">Every leg Leg Room is weighing up, built automatically from each game's player stats, injuries and lines. You don't need to pick from here; "Build it for me" does that. Add your own legs only if you want something specific.</p>
@@ -354,8 +539,57 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     </details>
       </div>
   </section>
-
-  <section class="panel" aria-labelledby="sliph">
+  <section class="o-slate panel" aria-labelledby="slateh">
+    <div class="phead"><h2 id="slateh">Slate</h2><div class="btns"><button class="btn small" type="button" id="prunePast">Remove past games</button><button class="btn small" type="button" id="slateToggle" aria-expanded="true" aria-controls="slateBody">Hide</button></div></div>
+    <div id="slateBody" class="slatebody">
+    <div class="note" id="exampleNote" hidden><span>Showing an example slate with made-up players and lines. Add a game or use Quick fill to start your own.</span><button class="btn small" type="button" id="hideExample">Hide example</button></div>
+    <p class="help" id="schedNote"></p>
+    <div class="livebar" id="liveBar" hidden><span class="dotlive" aria-hidden="true"></span><span id="liveMsg" role="status"></span><button class="btn small" type="button" id="liveBtn" hidden>Load live scores</button></div>
+    <div class="games" id="games"></div>
+    <details class="form" id="gameD">
+      <summary id="gameSum">Add a game</summary>
+      <form id="gameForm" class="grid2" autocomplete="off">
+        <input type="hidden" id="gId">
+        <div class="field"><label class="label" for="gAway">Away team</label><select id="gAway" required></select></div>
+        <div class="field"><label class="label" for="gHome">Home team</label><select id="gHome" required></select></div>
+        <div class="field"><label class="label" for="gDate">Date (Adelaide)</label><input type="date" id="gDate" required></div>
+        <div class="field"><label class="label" for="gTime">Tip-off</label><input type="time" id="gTime"></div>
+        <div class="field"><label class="label" for="gTotal">Game total line</label><input type="number" id="gTotal" step="0.5" inputmode="decimal" placeholder="226.5"></div>
+        <div class="field"><label class="label" for="gLine">Home line</label><input type="number" id="gLine" step="0.5" inputmode="decimal" placeholder="-4.5"></div>
+        <div class="field"><label class="label" for="gPaceA">Away pace</label><input type="number" id="gPaceA" step="0.1" inputmode="decimal" placeholder="Possessions per 48"></div>
+        <div class="field"><label class="label" for="gPaceH">Home pace</label><input type="number" id="gPaceH" step="0.1" inputmode="decimal" placeholder="Possessions per 48"></div>
+        <label class="check"><input type="checkbox" id="gB2BA"> Away on 2nd night of B2B</label>
+        <label class="check"><input type="checkbox" id="gB2BH"> Home on 2nd night of B2B</label>
+        <div class="field"><label class="label" for="gSpotA">Away spot</label><select id="gSpotA"></select></div>
+        <div class="field"><label class="label" for="gSpotH">Home spot</label><select id="gSpotH"></select></div>
+        <p class="help full">Home line is the home team's handicap, negative when they're favourites. Pace is optional; leave it blank to use league average.</p>
+        <div class="btns full"><button class="btn primary" type="submit" id="gSubmit">Add game</button><button class="btn" type="button" id="gCancel" hidden>Cancel edit</button></div>
+      </form>
+    </details>
+    </div>
+  </section>
+  <details class="o-set settings">
+    <summary>Tune the model</summary>
+    <div class="sliders" id="sliders"></div>
+  </details>
+  <footer class="o-foot">
+    <p>Chances are estimates from the numbers you enter, not guarantees. Every extra leg makes a multi less likely to land.</p>
+    <p class="help" id="dataHealth"></p>
+    <p>Only bet what you've set aside to lose. Gambling Help Online, free and 24/7: <strong>1800 858 858</strong> or gamblinghelponline.org.au</p>
+    <p><strong>18+ only.</strong> Every percentage here is an estimate, not a guarantee or financial advice. Leg Room is not affiliated with the NBA, ESPN or Sportsbet.</p>
+  </footer>
+  </div>
+  <aside class="colSide" aria-label="Selected matchup and your multi">
+  <section class="panel mhero" id="mhero" aria-labelledby="mhh">
+    <div id="mhBody"></div>
+  </section>
+  <section class="o-lt panel ltrack" id="ltPanel" aria-labelledby="lth" hidden>
+    <div class="phead"><h2 id="lth"><span class="dotlive" aria-hidden="true"></span>Your multi, live</h2><button class="btn small" type="button" id="ltRefresh">Refresh</button></div>
+    <p class="ltsum" id="ltSum" role="status"></p>
+    <ul class="ltlist" id="ltLegs"></ul>
+    <p class="help" id="ltNote"></p>
+  </section>
+  <section class="o-slip panel" aria-labelledby="sliph">
     <div class="phead"><h2 id="sliph">Your multi</h2><button class="btn small" type="button" id="clearSlip">Clear</button></div>
     <div class="seg" role="group" aria-label="Multi type">
       <button type="button" data-mode="sgm" aria-pressed="true">Same Game Multi</button>
@@ -365,46 +599,8 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     <div class="result" id="result"></div>
     <div class="warns" id="warns"></div>
   </section>
-
-  <section class="panel" aria-labelledby="buildh">
-    <h2 id="buildh">Build it for me</h2>
-    <p class="help">Choose how many legs and a risk level, and Leg Room builds the multi with the reasons behind every leg. Risk sets how hard each leg is. Games that have started are left out. SGM mode uses one game; multi-game mode takes the strongest leg from each game. Trap spots and luck markets are left out.</p>
-    <div class="grid2">
-      <div class="field full" id="sugGameF"><label class="label" for="sugGame">Game</label><select id="sugGame"></select></div>
-    </div>
-    <div class="field"><span class="label" id="legsLblS">Number of legs</span>
-      <div class="stepper" role="group" aria-labelledby="legsLblS">
-        <button type="button" class="btn sm" data-step="-10" aria-label="10 fewer legs">−10</button>
-        <button type="button" class="btn sm" data-step="-5" aria-label="5 fewer legs">−5</button>
-        <button type="button" class="btn" data-step="-1" aria-label="1 fewer leg">−1</button>
-        <input type="number" class="legsN" id="legsNS" min="2" max="20" inputmode="numeric" aria-label="Number of legs">
-        <button type="button" class="btn" data-step="1" aria-label="1 more leg">+1</button>
-        <button type="button" class="btn sm" data-step="5" aria-label="5 more legs">+5</button>
-        <button type="button" class="btn sm" data-step="10" aria-label="10 more legs">+10</button>
-      </div><span class="help steprange">2 to 20 legs, the most Sportsbet allows</span></div>
-    <div class="field"><label class="label" for="mustS">Must include (optional)</label>
-      <div class="mustrow"><input type="text" class="mustP" id="mustS" list="allPlayers" placeholder="Player name, e.g. Curry" autocomplete="off"><button class="btn small" type="button" data-clearmust>Clear</button></div></div>
-    <datalist id="allPlayers"></datalist>
-    <span class="label">Risk level</span>
-    <div class="tierbtns">
-      <button class="btn tb safe" type="button" data-tier="safe"><span>Safe</span><small class="rec">Recommended<br>3–8 legs</small></button>
-      <button class="btn tb med" type="button" data-tier="med"><span>Medium</span><small class="rec">Recommended<br>3–6 legs</small></button>
-      <button class="btn tb high" type="button" data-tier="high"><span>High risk</span><small class="rec">Recommended<br>3–5 legs</small></button>
-    </div>
-    <div class="games" id="sugs"></div>
-  </section>
-
-  <details class="settings">
-    <summary>Tune the model</summary>
-    <div class="sliders" id="sliders"></div>
-  </details>
-
-  <footer>
-    <p>Chances are estimates from the numbers you enter, not guarantees. Every extra leg makes a multi less likely to land.</p>
-    <p class="help" id="dataHealth"></p>
-    <p>Only bet what you've set aside to lose. Gambling Help Online, free and 24/7: <strong>1800 858 858</strong> or gamblinghelponline.org.au</p>
-    <p><strong>18+ only.</strong> Every percentage here is an estimate, not a guarantee or financial advice. Leg Room is not affiliated with the NBA, ESPN or Sportsbet.</p>
-  </footer>
+  </aside>
+  </div>
 </div>
 
 <script>
@@ -416,8 +612,20 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   const pos = v => { const x = fnum(v); return x != null && x > 0 ? x : null; };
   const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
   const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  // ---- colour theme: Auto follows the device (or the Claude app); Light and Dark are remembered on this device ----
+  const THEME_KEY = 'legroom-theme', rootEl = document.documentElement, hostTheme = rootEl.getAttribute('data-theme');
+  function applyTheme(v) {
+    if (v === 'light' || v === 'dark') rootEl.setAttribute('data-theme', v);
+    else if (hostTheme) rootEl.setAttribute('data-theme', hostTheme); else rootEl.removeAttribute('data-theme');
+    document.querySelectorAll('[data-themeopt]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeopt === (v || 'auto'))));
+    const dark = rootEl.getAttribute('data-theme') === 'dark' || (!rootEl.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', dark ? '#0d111a' : '#f1f3f7');
+  }
+  applyTheme(load(THEME_KEY) || 'auto');
+  try { new MutationObserver(() => { const v = load(THEME_KEY); if ((v === 'light' || v === 'dark') && rootEl.getAttribute('data-theme') !== v) rootEl.setAttribute('data-theme', v); }).observe(rootEl, { attributes: true, attributeFilter: ['data-theme'] }); } catch (e) {}
+  document.querySelectorAll('[data-themeopt]').forEach(b => b.addEventListener('click', () => { save(THEME_KEY, b.dataset.themeopt); applyTheme(b.dataset.themeopt); }));
   const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  const pct = (p, d) => (p * 100).toFixed(d == null ? 0 : d) + '%';
+  const pct = (p, d) => p > 0 && p < .001 && d ? '<0.1%' : (p * 100).toFixed(d == null ? 0 : d) + '%';
   const money = x => '$' + x.toFixed(2);
 
   const TEAMS = [
@@ -961,7 +1169,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     const legs = slipLegs();
     if (!legs.length) {
       $('slipLegs').innerHTML = '<div class="empty">Tap Add on legs in the pool, or let "Build it for me" pick some.</div>';
-      $('result').innerHTML = ''; $('warns').innerHTML = ''; return;
+      $('result').innerHTML = ''; $('warns').innerHTML = ''; try { renderTracker(); } catch (e) {} return;
     }
     const rated = legs.map(l => ({ leg: l, r: rate(l) }));
     const multiGames = new Set(legs.map(l => l.gameId)).size > 1;
@@ -996,6 +1204,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     }
     $('result').innerHTML = html;
     $('warns').innerHTML = warns.map(w => `<div class="${w[1]}">${esc(w[0])}</div>`).join('');
+    try { renderTracker(); if (!IN_CLAUDE) pollTracker(); } catch (e) {}
   }
 
   // ---- slate ----
@@ -1056,6 +1265,19 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
         <ul>${list.map(x => `<li><span class="dot ${LVL[x.lvl][0]}"></span><div><strong>${esc(x.name)}</strong> <span class="help">${x.status === 'q' ? 'Questionable' : 'Out'} · ${LVL[x.lvl][2]}</span><br><span class="help">${esc(x.text)}</span></div></li>`).join('')}</ul></details>`;
     }).join('');
   }
+  function gameChips(g) {
+    const e = env(g), chips = [], dp = e.pace - S.leaguePace;
+    if (dp >= 2) chips.push(['Fast pace ' + e.pace.toFixed(1), 'good']); else if (dp <= -2) chips.push(['Slow pace ' + e.pace.toFixed(1), 'warn']);
+    if (g.b2bA) chips.push([tname(g.away) + ' on B2B', 'warn']); if (g.b2bH) chips.push([tname(g.home) + ' on B2B', 'warn']);
+    [g.away, g.home].forEach(tm => { const f = fatigueOf(tm, g); if (f.tif) chips.push([tname(tm) + ' 3 games in 4 nights', 'warn']); if (f.ot) chips.push([tname(tm) + ' played OT last game', 'warn']); });
+    if (ALTITUDE.includes(g.home)) chips.push([tname(g.away) + ' at altitude', 'warn']);
+    [['spotA', g.away], ['spotH', g.home]].forEach(([k, t]) => { const s = g[k]; if (s === 'tank') chips.push([tname(t) + ' tank spot', 'bad']); if (s === 'rest') chips.push([tname(t) + ' rest risk', 'bad']); if (s === 'must') chips.push([tname(t) + ' must-win', 'good']); });
+    if (e.blowout) chips.push(['Blowout risk', 'warn']);
+    const rpx = e.rp, bt = pos(g.total), bl = fnum(g.homeLine);
+    if (rpx && bt && rpx.total - bt >= 6) chips.push(['Ratings say higher scoring', 'good']); else if (rpx && bt && bt - rpx.total >= 6) chips.push(['Ratings say lower scoring', 'warn']);
+    if (rpx && bl != null && Math.abs(rpx.margin + bl) >= 6) chips.push([Math.abs(rpx.margin) < Math.abs(bl) ? 'Ratings see a closer game' : 'Ratings see a bigger win', '']);
+    return chips;
+  }
   function renderGames() {
     const ex = showingExample();
     $('exampleNote').hidden = !ex;
@@ -1064,19 +1286,9 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     let html = '', last = '';
     games.forEach(g => {
       if (g.date !== last) { html += `<div class="label daylbl">${esc(dayLabel(g.date))}</div>`; last = g.date; }
-      const e = env(g), L = S.leaguePace, chips = [];
-      const dp = e.pace - L;
-      if (dp >= 2) chips.push(['Fast pace ' + e.pace.toFixed(1), 'good']); else if (dp <= -2) chips.push(['Slow pace ' + e.pace.toFixed(1), 'warn']);
-      if (g.b2bA) chips.push([tname(g.away) + ' on B2B', 'warn']); if (g.b2bH) chips.push([tname(g.home) + ' on B2B', 'warn']);
-      [[g.away, 'A'], [g.home, 'H']].forEach(([tm]) => { const f = fatigueOf(tm, g); if (f.tif) chips.push([tname(tm) + ' 3 games in 4 nights', 'warn']); if (f.ot) chips.push([tname(tm) + ' played OT last game', 'warn']); });
-      if (ALTITUDE.includes(g.home)) chips.push([tname(g.away) + ' at altitude', 'warn']);
-      [['spotA', g.away], ['spotH', g.home]].forEach(([k, t]) => { const s = g[k]; if (s === 'tank') chips.push([tname(t) + ' tank spot', 'bad']); if (s === 'rest') chips.push([tname(t) + ' rest risk', 'bad']); if (s === 'must') chips.push([tname(t) + ' must-win', 'good']); });
-      if (e.blowout) chips.push(['Blowout risk', 'warn']);
+      const e = env(g), chips = gameChips(g);
       const rpx = e.rp, bt = pos(g.total);
       const ratLine = rpx ? `<div class="gline help">Team ratings project ${esc(tname(g.away))} ${Math.round(rpx.away)} – ${esc(tname(g.home))} ${Math.round(rpx.home)} (total ${Math.round(rpx.total)})${bt ? '' : ', used until the bookies post a line'}</div>` : '';
-      if (rpx && bt && rpx.total - bt >= 6) chips.push(['Ratings say higher scoring', 'good']); else if (rpx && bt && bt - rpx.total >= 6) chips.push(['Ratings say lower scoring', 'warn']);
-      const bl = fnum(g.homeLine);
-      if (rpx && bl != null && Math.abs(rpx.margin + bl) >= 6) chips.push([Math.abs(rpx.margin) < Math.abs(bl) ? 'Ratings see a closer game' : 'Ratings see a bigger win', '']);
       const defLine = DEFRANK.drtg && DEFRANK.drtg[g.away] && DEFRANK.drtg[g.home] ? `<div class="gline help">Defence rank (points allowed per 100, 1st is best): ${esc(tname(g.away))} ${ordn(DEFRANK.drtg[g.away])} · ${esc(tname(g.home))} ${ordn(DEFRANK.drtg[g.home])}</div>` : '';
       const hl = fnum(g.homeLine);
       const favT = hl == null || hl === 0 ? '' : hl < 0 ? tname(g.home) : tname(g.away);
@@ -1095,7 +1307,132 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
         ${ex ? '' : `<div class="btns"><button class="btn small" type="button" data-gedit="${g.id}">Edit</button><button class="btn small" type="button" data-gdel="${g.id}">Remove</button></div>`}</div>`;
     });
     $('games').innerHTML = html;
+    try { renderBoard(); } catch (e) { console.warn(e); }
   }
+
+
+  // ---- desktop: the matchup board and the selected matchup ----
+  const HERO_KEY = 'legroom-hero';
+  let heroId = load(HERO_KEY) || null, heroRes = null;
+  const fmtTime = g => g.time ? startOf(g).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) : 'Time TBC';
+  function boardGames() { const now = Date.now(); return gamesList().filter(g => !g.time || startOf(g).getTime() > now - 5 * 3600e3).sort((a, b) => startOf(a) - startOf(b)); }
+  function heroGame() {
+    const gs = boardGames(); let g = gs.find(x => x.id === heroId);
+    if (!g) g = gs.find(x => { const lv = liveFor(x); return lv && lv.live; }) || gs.find(x => x.time && startOf(x) > Date.now()) || gs[0];
+    return g || null;
+  }
+  const teamVars = g => '--c1:' + (TCOL[g.away] || ['#3a3f5c'])[0] + ';--c2:' + (TCOL[g.home] || ['#5c3a4a'])[0];
+  const lineText = (g, m) => m == null ? '–' : Math.abs(m) < .25 ? 'Even' : (m > 0 ? g.home : g.away) + ' −' + (Math.round(Math.abs(m) * 2) / 2).toFixed(1);
+  function liveTag(lv) {
+    if (!lv) return '';
+    if (lv.dummy) return '<span class="dotlive" aria-hidden="true"></span>LIVE';
+    if (!lv.live) return 'FINAL · ' + lv.a + '–' + lv.h;
+    return '<span class="dotlive" aria-hidden="true"></span>' + lv.a + '–' + lv.h + ' · ' + (lv.half ? 'HALF-TIME' : (lv.q > 4 ? 'OT' : 'Q' + (lv.q || '')) + ' ' + esc(lv.clock || ''));
+  }
+  function renderLiveBanner() {
+    const box = $('liveBanner'); if (!box) return;
+    const on = gamesList().map(g => [g, liveFor(g)]).filter(([, lv]) => lv && lv.live).sort((a, b) => startOf(a[0]) - startOf(b[0]));
+    box.hidden = !on.length; if (!on.length) { $('lbGames').innerHTML = ''; return; }
+    $('lbGames').innerHTML = on.map(([g, lv]) => {
+      const score = lv.dummy ? '<i class="ph" aria-hidden="true"></i> – <i class="ph" aria-hidden="true"></i>' : lv.a + ' – ' + lv.h;
+      const clock = lv.dummy ? 'Live score on the website' : lv.half ? 'Half-time' : (lv.q > 4 ? 'OT' : 'Q' + (lv.q || '')) + (lv.clock ? ' · ' + esc(lv.clock) : '');
+      return `<button type="button" class="lbg" data-hero="${esc(g.id)}" style="${teamVars(g)}" aria-label="${esc(tname(g.away) + ' ' + (lv.dummy ? '' : lv.a) + ', ' + tname(g.home) + ' ' + (lv.dummy ? '' : lv.h))}"><span class="lb-t">${esc(g.away)}</span><span class="lb-s">${score}</span><span class="lb-t lb-h">${esc(g.home)}</span><span class="lb-c">${clock}</span></button>`;
+    }).join('');
+  }
+  function renderBoard() {
+    try { renderLiveBanner(); } catch (e) {}
+    const el = $('mbGrid'); if (!el) return;
+    const gs = boardGames(), sel = heroGame();
+    if (!gs.length) { el.innerHTML = '<div class="empty">No games on the slate yet. They load with the next data update.</div>'; renderHero(); return; }
+    let html = '', last = '';
+    gs.forEach(g => {
+      if (g.date !== last) { html += `<div class="mb-day">${esc(dayLabel(g.date))}</div>`; last = g.date; }
+      const lv = liveFor(g), hl = fnum(g.homeLine), tt = pos(g.total), on = sel && sel.id === g.id;
+      const meta = [tt ? 'O/U ' + tt : '', hl != null ? (hl === 0 ? "Pick'em" : (hl < 0 ? g.home : g.away) + ' −' + Math.abs(hl)) : ''].filter(Boolean).join(' · ');
+      html += `<button type="button" class="mcard${on ? ' on' : ''}${lv && !lv.live && !lv.dummy ? ' done' : ''}" data-hero="${esc(g.id)}" style="${teamVars(g)}" aria-pressed="${!!on}" aria-label="${esc(tname(g.away) + ' vs ' + tname(g.home) + ', ' + fmtTime(g))}">
+        <span class="mc-time">${lv ? liveTag(lv) : esc(fmtTime(g))}</span>
+        <span class="mc-teams">${esc(g.away)}<i>×</i>${esc(g.home)}</span>
+        <span class="mc-names">${esc(tname(g.away))} / ${esc(tname(g.home))}</span>
+        ${meta ? `<span class="mc-meta">${esc(meta)}</span>` : ''}</button>`;
+    });
+    const keep = el.scrollLeft;
+    el.innerHTML = html; el.scrollLeft = keep;
+    if (!el.dataset.placed) { el.dataset.placed = '1'; const on = el.querySelector('.mcard.on'); if (on) el.scrollLeft = Math.max(0, on.offsetLeft - el.offsetLeft - 40); }
+    renderHero();
+  }
+  function heroLegs(g) {
+    const seen = {}, out = [];
+    ratedLegs(l => l.gameId === g.id).filter(x => x.r.p >= .55 && x.r.p <= .93).sort((a, b) => legScore(b) - legScore(a)).forEach(x => {
+      const who = x.leg.type === 'player' ? nm(x.leg.player) : 'team:' + x.leg.type;
+      if (seen[who] || out.length >= 6) return; seen[who] = 1; out.push(x);
+    });
+    return out;
+  }
+  function renderHero() {
+    const box = $('mhBody'); if (!box) return;
+    const g = heroGame();
+    if (!g) { box.innerHTML = '<div class="mh-body"><p class="help">Pick a game from the board.</p></div>'; return; }
+    const e = env(g), lv = liveFor(g), tt = pos(g.total), hl = fnum(g.homeLine), started = g.time && startOf(g) <= Date.now();
+    const eyebrow = lv ? liveTag(lv) : esc(('Selected matchup · ' + dayLabel(g.date) + ' ' + fmtTime(g)).toUpperCase());
+    const legs = started ? [] : heroLegs(g);
+    const inSlip = id => slip.ids.includes(id);
+    const chips = gameChips(g);
+    const res = heroRes && heroRes.game && heroRes.game.id === g.id ? heroRes : null;
+    box.innerHTML = `<div class="mh-top" style="${teamVars(g)}">
+        <div class="mh-eyebrow">${eyebrow}</div>
+        <h2 class="mh-name" id="mhh">${esc(tname(g.away))}<br><span class="mh-vs">vs</span>${esc(tname(g.home))}</h2>
+        <div class="mh-stats">
+          <div><span>Model total</span><b>${e.projTotal != null ? e.projTotal.toFixed(1) : '–'}</b></div>
+          <div><span>Market total</span><b>${tt || '–'}</b></div>
+          <div><span>Model line</span><b>${esc(lineText(g, e.margin))}</b></div>
+          <div><span>Market line</span><b>${hl == null ? '–' : esc(lineText(g, -hl))}</b></div>
+        </div></div>
+      <div class="mh-body">
+        <h3>Build this matchup</h3>
+        ${started ? '<p class="help">This game has started, so there\'s nothing left to build. Track your legs in "Your multi, live".</p>' : legs.length ? `<ul class="mh-legs">${legs.map(x => `<li><div><strong>${esc(title(x.leg))}</strong><small><b>${pct(x.r.p)}</b> · ${esc(likely(x.r.p)[0])}</small></div><button type="button" class="btn small mh-add" data-slip2="${esc(x.leg.id)}" aria-pressed="${inSlip(x.leg.id)}" aria-label="${inSlip(x.leg.id) ? 'Remove from' : 'Add to'} your multi">${inSlip(x.leg.id) ? '✓' : '+'}</button></li>`).join('')}</ul>` : `<p class="help">${esc(noStatsMsg([g.id]) || 'No strong legs in this game yet.')}</p>`}
+        ${started ? '' : `<div class="mh-sgm"><span class="label">Same Game Multi · ${legsN} legs (set in Today's best)</span>
+          <div class="mh-tiers"><button type="button" class="btn small safe" data-hsgm="safe">Safe</button><button type="button" class="btn small med" data-hsgm="med">Medium</button><button type="button" class="btn small high" data-hsgm="high">High</button></div>
+          <div id="mhOut">${res ? cardHTML(res, 'hero', res.sz) : res === null && heroRes && heroRes.msg && heroRes.gid === g.id ? `<p class="help">${esc(heroRes.msg)}</p>` : ''}</div></div>`}
+        ${chips.length || g.inj ? `<details class="mh-news"><summary>Team news and spots</summary>${chips.length ? `<div class="chips">${chips.map(c => `<span class="chip ${c[1]}">${esc(c[0])}</span>`).join('')}</div>` : ''}${injHTML(g)}</details>` : ''}
+      </div>`;
+  }
+  // Mouse wheel over the games row glides the row sideways (the page carries on once the row hits either end).
+  const mbWheel = { target: null, raf: 0 };
+  { const row = $('mbGrid'), calm = matchMedia('(prefers-reduced-motion: reduce)');
+    const step = () => {
+      const diff = mbWheel.target - row.scrollLeft;
+      if (Math.abs(diff) < .6) { row.scrollLeft = mbWheel.target; mbWheel.target = null; mbWheel.raf = 0; return; }
+      row.scrollLeft += diff * .22; mbWheel.raf = requestAnimationFrame(step);
+    };
+    if (row) row.addEventListener('wheel', e => {
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      const d = e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? row.clientWidth : 1);
+      const max = row.scrollWidth - row.clientWidth, from = mbWheel.target != null ? mbWheel.target : row.scrollLeft;
+      if ((d < 0 && from <= 0) || (d > 0 && from >= max - 1)) return;
+      e.preventDefault();
+      mbWheel.target = Math.max(0, Math.min(max, from + d));
+      if (calm.matches) { row.scrollLeft = mbWheel.target; mbWheel.target = null; return; }
+      if (!mbWheel.raf) mbWheel.raf = requestAnimationFrame(step);
+    }, { passive: false }); }
+  document.addEventListener('click', e => {
+    const ms = e.target.closest('[data-mbscroll]');
+    if (ms) { const g = $('mbGrid'); if (mbWheel.raf) { cancelAnimationFrame(mbWheel.raf); mbWheel.raf = 0; } mbWheel.target = null; g.scrollBy({ left: +ms.dataset.mbscroll * Math.max(260, g.clientWidth * .8), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); return; }
+    const h = e.target.closest('[data-hero]');
+    if (h) { heroId = h.dataset.hero; save(HERO_KEY, heroId); const sg = $('sugGame'); if (sg && [...sg.options].some(o => o.value === heroId)) sg.value = heroId; renderBoard(); return; }
+    const a = e.target.closest('[data-slip2]');
+    if (a) { const id = a.dataset.slip2, i = slip.ids.indexOf(id); if (i >= 0) slip.ids.splice(i, 1); else slip.ids.push(id); if (new Set(slipLegs().map(l => l.gameId)).size > 1) slip.mode = 'multi'; saveSlip(); renderLegs(); renderSlip(); renderHero(); return; }
+    const s = e.target.closest('[data-hsgm]');
+    if (s) {
+      const g = heroGame(), t = TIERS.find(x => x.key === s.dataset.hsgm), sz = curSize(); if (!g || !t) return;
+      $('mhOut').innerHTML = '<p class="help">Working…</p>';
+      setTimeout(() => {
+        const r = buildSGM(g.id, t, sz, 555);
+        if (r && !r.err) { heroRes = Object.assign(r, { tier: t, mode: 'sgm', game: g, container: 'mhOut', pre: '', sz, skipped: [], note: '' }); logPicks(heroRes, sz); }
+        else heroRes = { gid: g.id, msg: r && r.err ? mustPlayer + ' has no legs in this game.' : 'Not enough suitable ' + t.label.toLowerCase() + ' legs in this game.' };
+        renderHero();
+      }, 30);
+    }
+  });
 
   // ---- leg pool ----
   let poolCap = 30;
@@ -1715,7 +2052,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   }
   // Beam search: grow combinations one leg at a time, keeping the best few at each size.
   // Each combo carries the simulated games it survives, so adding a leg is one pass.
-  function bestCombo(pool, sz, seed, forced) {
+  function bestCombo(pool, sz, seed, forced, perGame) {
     forced = forced || [];
     if (pool.length < sz.min) return null;
     const bigRun = sz.max > 12, n = bigRun ? 2500 : 5000, hits = simulate(pool.map(x => ({ leg: x.leg, p: x.r.p })), n, seed), B = bigRun ? 24 : 50;
@@ -1729,6 +2066,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
       beam.forEach(c => {
         for (let i = 0; i < pool.length; i++) {
           if (c.idx.includes(i) || c.idx.some(j => clash(pool[i].leg, pool[j].leg))) continue;
+          if (perGame && c.idx.filter(j => pool[j].leg.gameId === pool[i].leg.gameId).length >= perGame) continue;
           const idx = c.idx.concat(i).sort((a, b) => a - b), key = idx.join();
           if (next.has(key)) continue;
           const h = hits[i], mask = new Uint8Array(n); let cnt = 0;
@@ -1765,6 +2103,18 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     ratedLegs(l => !gameIds || gameIds.includes(l.gameId)).filter(x => x.r.p >= t.pmin && x.r.p <= t.pmax && roleOk(x.leg, t)).forEach(x => (byGame[x.leg.gameId] = byGame[x.leg.gameId] || []).push(x));
     let fl = null;
     if (mustPlayer) { fl = forcedLeg(mustPlayer, t, l => !gameIds || gameIds.includes(l.gameId)); if (!fl) return { err: 'player' }; }
+    // More legs than games: let a game carry a small Same Game Multi inside the multi (up to 4 legs).
+    const nG = new Set(Object.keys(byGame).concat(fl ? [fl.leg.gameId] : [])).size;
+    const perGame = sz.max > nG && nG >= 1 ? Math.min(4, Math.ceil(sz.max / nG)) : 1;
+    if (perGame > 1) {
+      let pool2 = [];
+      Object.keys(byGame).forEach(g => { pool2 = pool2.concat(diversePool(byGame[g], t, perGame * 2 + 2, 2)); });
+      let forced = [];
+      if (fl) { pool2 = [fl].concat(pool2.filter(x => x.leg.id !== fl.leg.id && !clash(x.leg, fl.leg))); forced = [0]; }
+      const r = bestCombo(pool2, sz, 4321, forced, perGame);
+      if (!r) return null;
+      return Object.assign(r, { forcedId: fl ? fl.leg.id : null, scope: gameIds, perGame });
+    }
     const pool = Object.keys(byGame).filter(g => !fl || g !== fl.leg.gameId).map(g => byGame[g].sort((a, b) => legScore(b) - legScore(a))[0]).sort((a, b) => b.r.p - a.r.p);
     const k = Math.min(sz.max, pool.length + (fl ? 1 : 0));
     if (k < 2) return null;
@@ -1773,7 +2123,8 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   }
   // ---- swap a leg ----
   function recalc(s) {
-    if (s.mode === 'sgm') { const n = 20000, hits = simulate(s.legs.map(x => ({ leg: x.leg, p: x.r.p })), n, 4242); s.jp = joint(hits, s.legs.map((_, i) => i), n); }
+    const sameGame = s.legs.some((x, i) => s.legs.some((y, j) => j !== i && y.leg.gameId === x.leg.gameId));
+    if (s.mode === 'sgm' || sameGame) { const n = 20000, hits = simulate(s.legs.map(x => ({ leg: x.leg, p: x.r.p })), n, 4242); s.jp = joint(hits, s.legs.map((_, i) => i), n); }
     else s.jp = s.legs.reduce((a, x) => a * x.r.p, 1);
     const ind = s.legs.reduce((a, x) => a * x.r.p, 1); s.lift = ind > 0 ? s.jp / ind : 1;
   }
@@ -1787,7 +2138,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     const cap = s.legs.length >= 7 ? 3 : 2;
     let cands = ratedLegs(l => s.mode === 'sgm' ? l.gameId === out.leg.gameId : (!s.scope || s.scope.includes(l.gameId)))
       .filter(x => x.r.p >= t.pmin && x.r.p <= t.pmax && roleOk(x.leg, t) && !s.skipped.includes(x.leg.id) && !s.legs.some(y => y.leg.id === x.leg.id) && !others.some(o => clash(o.leg, x.leg)) && (x.leg.type !== 'player' || (per[nm(x.leg.player)] || 0) < cap));
-    if (s.mode === 'multi') cands = cands.filter(x => !others.some(o => o.leg.gameId === x.leg.gameId));
+    if (s.mode === 'multi') cands = cands.filter(x => others.filter(o => o.leg.gameId === x.leg.gameId).length < (s.perGame || 1));
     if (!cands.length) { s.note = 'No other suitable ' + t.label.toLowerCase() + ' leg to swap in for ' + title(out.leg) + '.'; s.skipped.pop(); return redraw(key); }
     cands = cands.sort((a, b) => legScore(b) - legScore(a)).slice(0, 12);
     let pick = cands[0];
@@ -1848,6 +2199,7 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     return `<div class="sugg"><div class="phead"><span class="tier ${s.tier.key}">${esc(s.tier.label)}</span><span class="label">${s.legs.length} legs · ${pct(s.jp, s.jp < .1 ? 1 : 0)} · ${oneIn(s.jp)}</span></div>
       ${s.game ? `<div class="label">${matchupB(s.game)} · ${s.game.time ? startOf(s.game).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) : ''}</div>` : ''}
       <p class="help">Listed in the order of Sportsbet's market sections, so you can work down the page once.</p>
+      ${s.mode === 'multi' && s.legs.some((x, i) => s.legs.some((y, j) => j !== i && y.leg.gameId === x.leg.gameId)) ? `<p class="help">Games with more than one leg go in as a <strong>Same Game Multi inside the multi</strong>: build that game's SGM on Sportsbet first, then add it to your multi with the other games.</p>` : ''}
       ${s.note ? `<p class="help status ok">${esc(s.note)}</p>` : ''}
       <ul class="sblist">${sbList(s.legs, s.mode === 'multi', x => `<li><div class="legrow"><div><strong>${esc(title(x.leg))}</strong> <b>${pct(x.r.p)}</b></div>${x.leg.id === s.forcedId ? '<span class="chip good">Must include</span>' : `<button class="btn small swap" type="button" data-swap="${key}|${esc(x.leg.id)}">Swap</button>`}</div><span class="why">${esc(legWhy(x.leg, x.r))}</span></li>`)}</ul>
       ${s.legs.length < sz.want ? `<p class="help">You asked for ${sz.want} legs. ${s.mode === 'multi' ? `Only ${s.legs.length} games had a suitable ${esc(s.tier.label.toLowerCase())} leg (one leg per game).` : `Only ${s.legs.length} suitable ${esc(s.tier.label.toLowerCase())} legs fit together in this game.`}</p>` : ''}
@@ -2065,7 +2417,28 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     });
     LIVE = next; renderGames();
   }
+  // ---- test live preview (Claude copy only): fake games played at one game minute every two seconds ----
+  var TEST = { on: false, t0: 0, ids: [], timer: 0 };
+  const hash01 = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000) / 1000; };
+  const testEl = () => Math.min(48, 14 + (Date.now() - TEST.t0) / 2000);
+  function testLive(g) {
+    if (!TEST.on || !TEST.ids.includes(g.id)) return null;
+    const el = testEl() - TEST.ids.indexOf(g.id) * 6, e = env(g), tot = e.projTotal || 222, m = e.margin || 0;
+    if (el <= 0) return null;
+    const h = Math.round((tot / 2 + m / 2) * el / 48 * (.9 + .2 * hash01(g.id + 'h' + TEST.t0))), a = Math.round((tot / 2 - m / 2) * el / 48 * (.9 + .2 * hash01(g.id + 'a' + TEST.t0)));
+    const fin = el >= 48, q = Math.min(4, Math.floor(el / 12) + 1), rem = fin ? 0 : q * 12 - el, half = !fin && Math.abs(el - 24) < .4;
+    return { live: !fin, a, h, q, clock: Math.floor(rem) + ':' + String(Math.floor((rem % 1) * 60)).padStart(2, '0'), half, el, test: true };
+  }
+  function testBox(g) {
+    const lv = testLive(g); if (!lv) return null;
+    const f = Math.min(1, lv.el / 48), split = (tot) => { const r = tot / Math.max(lv.el, 1), ls = [1, 2, 3, 4].map(q => Math.round(r * Math.max(0, Math.min(12, lv.el - (q - 1) * 12)))); const d = tot - ls.reduce((x, y) => x + y, 0); ls[Math.min(3, Math.floor((lv.el - .01) / 12))] += d; return ls; };
+    const players = {};
+    const roster = (typeof autoOf === 'function' && autoOf(g) && autoOf(g).players) || g.players || {};
+    ['away', 'home'].forEach(sd => ((roster[sd]) || []).forEach(p => { const j = .45 + 1.1 * hash01(p.name + TEST.t0); players[nm(p.name)] = { pts: Math.round((p.pts || 0) * f * j), reb: Math.round((p.reb || 0) * f * j), ast: Math.round((p.ast || 0) * f * j), thr: Math.round((p.thr || 0) * f * j), stl: Math.round((p.stl || 0) * f * j), blk: Math.round((p.blk || 0) * f * j), min: Math.round((p.min || 0) * f), dnp: false }; }));
+    return { state: lv.live ? 'in' : 'post', final: !lv.live, half: lv.half, period: lv.q, clock: lv.clock, sides: { home: { abbr: g.home, score: lv.h, ls: split(lv.h) }, away: { abbr: g.away, score: lv.a, ls: split(lv.a) } }, players, at: Date.now() };
+  }
   function liveFor(g) {
+    const tl = testLive(g); if (tl) return tl;
     const x = LIVE[liveKey(g.away, g.home)];
     if ((!x || x.a == null || x.h == null) && window.claude && window.claude.use && g.time) {
       // Development copy: no live feed, so show a placeholder while the game should be on.
@@ -2238,6 +2611,178 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     pollLive(false);
   }
 
+
+  // ---- live leg tracker: your multi's legs during the game ----
+  var LT = { box: {}, prev: {}, timer: null, busy: false, err: '' };
+  const PER_Q = { ft: [1, 2, 3, 4], '1h': [1, 2], '2h': [3, 4], q1: [1], q2: [2], q3: [3], q4: [4] };
+  const ESPN_SUM = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=';
+  const ltGames = () => [...new Set(slipLegs().map(l => l.gameId))].map(id => gamesList().find(g => g.id === id)).filter(Boolean);
+  const ltWindow = g => { if (TEST.on && TEST.ids.includes(g.id)) return true; if (!g.time) return false; const t = startOf(g).getTime(), now = Date.now(); return now >= t - 30 * 60e3 && now < t + 6 * 3600e3; };
+  function parseSummary(js) {
+    const comp = ((js.header || {}).competitions || [])[0] || {}, st = comp.status || {}, ty = st.type || {};
+    const sides = {};
+    (comp.competitors || []).forEach(c => { sides[c.homeAway] = { abbr: espnAbbr(c.team && c.team.abbreviation), score: +c.score || 0, ls: (c.linescores || []).map(x => +(x.displayValue != null ? x.displayValue : x.value) || 0) }; });
+    const players = {};
+    ((js.boxscore || {}).players || []).forEach(tp => {
+      const s0 = (tp.statistics || [])[0]; if (!s0) return;
+      const names = (s0.names || s0.labels || []).map(n => String(n).toUpperCase());
+      (s0.athletes || []).forEach(a => {
+        const v = a.stats || [], num = k => { const i = names.indexOf(k); return i < 0 || i >= v.length ? 0 : parseInt(String(v[i]).split('-')[0], 10) || 0; };
+        players[nm(a.athlete && a.athlete.displayName)] = { pts: num('PTS'), reb: num('REB'), ast: num('AST'), thr: num('3PT'), stl: num('STL'), blk: num('BLK'), min: num('MIN'), dnp: !!a.didNotPlay || !v.length };
+      });
+    });
+    return { state: ty.state, final: ty.state === 'post' || !!ty.completed, half: ty.name === 'STATUS_HALFTIME', period: +st.period || 0, clock: st.displayClock || '', sides, players, at: Date.now() };
+  }
+  function elapsedMin(B) {
+    if (B.final) return Math.max(48, 48 + 5 * Math.max(0, B.period - 4));
+    if (!B.period || B.state === 'pre') return 0;
+    const [m, s] = String(B.clock || '0:00').split(':').map(Number), c = (m || 0) + (s || 0) / 60;
+    if (B.half) return 24;
+    return B.period <= 4 ? (B.period - 1) * 12 + (12 - c) : 48 + (B.period - 5) * 5 + (5 - c);
+  }
+  // Status of one leg: landed, track (on track), behind, trouble, lost, wait (not started), none (can't track).
+  function evalLeg(l, r, B, g) {
+    const home = l.team === 'home', me = B.sides[home ? 'home' : 'away'] || { score: 0, ls: [] }, op = B.sides[home ? 'away' : 'home'] || { score: 0, ls: [] };
+    const qs = PER_Q[l.period || 'ft'] || PER_Q.ft, ft = (l.period || 'ft') === 'ft';
+    const el = elapsedMin(B), wStart = (qs[0] - 1) * 12, wEnd = qs[qs.length - 1] * 12;
+    if (B.state === 'pre' || (!ft && !B.final && el < wStart)) return { st: 'wait', text: ft ? 'Not started' : 'Waits for the ' + PERIODS[l.period][0].toLowerCase(), frac: 0 };
+    const done = B.final || (!ft && B.period > qs[qs.length - 1]);
+    const left = done ? 0 : ft ? Math.max(0, 48 - el) / 48 : Math.max(0, wEnd - Math.max(el, wStart)) / 48;
+    const sum = s => ft ? s.score : qs.reduce((a, q) => a + (s.ls[q - 1] || 0), 0);
+    const e = env(g), over = l.side !== 'under';
+    const homeM = e.margin || 0, myM = (home ? homeM : -homeM), projT = e.projTotal || 220;
+    const band = (proj, need, tol) => proj >= need + tol ? 'track' : proj >= need - tol ? 'behind' : 'trouble';
+    if (l.type === 'player') {
+      if (!ft) return { st: 'none', text: 'Period player legs aren\'t tracked', frac: 0 };
+      const P = B.players[nm(l.player)], L = fnum(l.line), k = Math.floor(L) + 1, unit = (STAT[l.stat] || STAT.points)[1];
+      if (!P || P.dnp) return el > 6 && !B.final ? { st: 'trouble', text: 'Hasn\'t played yet', frac: 0 } : B.final ? { st: 'lost', text: 'Didn\'t play', frac: 0 } : { st: 'wait', text: 'Waiting to check in', frac: 0 };
+      const cur = statOf(P, l.stat), projF = cur + (r && r.proj ? r.proj : 0) * left, meta = ' · ' + P.min + ' min';
+      if (over) {
+        if (cur >= k) return { st: 'landed', text: cur + ' ' + unit + ', needed ' + k + meta, frac: 1 };
+        if (done) return { st: 'lost', text: cur + ' of ' + k + ' ' + unit + meta, frac: cur / k };
+        const ratio = projF / k;
+        return { st: ratio >= 1 ? 'track' : ratio >= .85 ? 'behind' : 'trouble', text: cur + ' of ' + k + ' ' + unit + ' · on pace for ' + Math.round(projF) + meta, frac: cur / k };
+      }
+      if (cur > L) return { st: 'lost', text: cur + ' ' + unit + ', needed under ' + L + meta, frac: 1 };
+      if (done) return { st: 'landed', text: cur + ' ' + unit + ', under ' + L + meta, frac: cur / L };
+      return { st: projF <= L - 1 ? 'track' : projF <= L + 1.5 ? 'behind' : 'trouble', text: cur + ' ' + unit + ' · on pace for ' + Math.round(projF) + ', needs under ' + L + meta, frac: Math.min(1, cur / Math.max(1, L)) };
+    }
+    const m = sum(me) - sum(op), expM = myM * left, projM = m + expM;
+    const mtxt = (m > 0 ? 'Up ' + m : m < 0 ? 'Down ' + (-m) : 'Level') + (ft ? '' : ' in the ' + PERIODS[l.period][0].toLowerCase());
+    if (l.type === 'h2h') {
+      if (done) return { st: m > 0 ? 'landed' : 'lost', text: mtxt, frac: m > 0 ? 1 : 0 };
+      return { st: band(projM, 0, 3), text: mtxt, frac: Math.max(0, Math.min(1, .5 + projM / 30)) };
+    }
+    if (l.type === 'line') {
+      const H = fnum(l.line) || 0, cover = m + H;
+      if (done) return { st: cover > 0 ? 'landed' : 'lost', text: mtxt + ', needs to ' + (H < 0 ? 'win by ' + (-H) : 'lose by under ' + H), frac: cover > 0 ? 1 : 0 };
+      return { st: band(projM + H, 0, 3), text: mtxt + ', needs ' + (H < 0 ? 'to win by ' + (-H) : 'to stay within ' + H), frac: Math.max(0, Math.min(1, .5 + (projM + H) / 30)) };
+    }
+    if (l.type === 'margin') {
+      const lo = fnum(l.lo), hi = fnum(l.hi), inBand = v => v >= lo && (hi == null || v <= hi);
+      if (done) return { st: inBand(m) ? 'landed' : 'lost', text: mtxt + ', needed ' + (hi == null ? lo + '+' : lo + '–' + hi), frac: inBand(m) ? 1 : 0 };
+      return { st: inBand(Math.round(projM)) ? 'track' : (projM >= lo - 4 && (hi == null || projM <= hi + 4)) ? 'behind' : 'trouble', text: mtxt + ', needs ' + (hi == null ? lo + '+' : lo + '–' + hi), frac: Math.max(0, Math.min(1, m / Math.max(1, lo))) };
+    }
+    if (l.type === 'game_total' || l.type === 'team_total') {
+      const L = fnum(l.line), cur = l.type === 'game_total' ? sum(me) + sum(op) : sum(me);
+      const full = l.type === 'game_total' ? projT : projT / 2 + myM / 2, projF = cur + full * left, what = l.type === 'game_total' ? 'total points' : 'team points';
+      if (over) {
+        if (cur > L) return { st: 'landed', text: cur + ' ' + what + ', needed over ' + L, frac: 1 };
+        if (done) return { st: 'lost', text: cur + ' ' + what + ', needed over ' + L, frac: cur / L };
+        return { st: band(projF, L, 4), text: cur + ' ' + what + ' · on pace for ' + Math.round(projF) + ', needs over ' + L, frac: cur / L };
+      }
+      if (cur > L) return { st: 'lost', text: cur + ' ' + what + ', needed under ' + L, frac: 1 };
+      if (done) return { st: 'landed', text: cur + ' ' + what + ', under ' + L, frac: cur / L };
+      return { st: projF <= L - 4 ? 'track' : projF <= L + 4 ? 'behind' : 'trouble', text: cur + ' ' + what + ' · on pace for ' + Math.round(projF) + ', needs under ' + L, frac: Math.min(1, cur / L) };
+    }
+    return { st: 'none', text: 'Not tracked', frac: 0 };
+  }
+  const LT_LABEL = { landed: 'Landed', track: 'On track', behind: 'Behind pace', trouble: 'In trouble', lost: 'Lost', wait: 'Not started', none: '—', preview: 'Live preview' };
+  // One tracker row in the Sportsbet style: team jersey, player and market, value riding the bar, status on the right.
+  let jerseyN = 0;
+  const JERSEY = (c1, c2, id = 'jc' + (++jerseyN)) => `<svg class="jersey" viewBox="0 0 40 39" aria-hidden="true"><defs><clipPath id="${id}"><path d="M10.6 2H15.2C15.8 5.3 17.6 7.3 20 7.3S24.2 5.3 24.8 2H29.4L31.4 10.2C29.3 11.6 28.4 13.9 28.4 16.6V37H11.6V16.6C11.6 13.9 10.7 11.6 8.6 10.2Z"/></clipPath></defs><path d="M10.6 2H15.2C15.8 5.3 17.6 7.3 20 7.3S24.2 5.3 24.8 2H29.4L31.4 10.2C29.3 11.6 28.4 13.9 28.4 16.6V37H11.6V16.6C11.6 13.9 10.7 11.6 8.6 10.2Z" fill="${c1}"/><path d="M6 23L34 6.5V12.5L6 29Z" fill="${c2}" clip-path="url(#${id})"/><path d="M15.2 2C15.8 5.3 17.6 7.3 20 7.3S24.2 5.3 24.8 2M29.4 2L31.4 10.2C29.3 11.6 28.4 13.9 28.4 16.6M10.6 2L8.6 10.2C10.7 11.6 11.6 13.9 11.6 16.6" fill="none" stroke="${c2}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.6 2H15.2C15.8 5.3 17.6 7.3 20 7.3S24.2 5.3 24.8 2H29.4L31.4 10.2C29.3 11.6 28.4 13.9 28.4 16.6V37H11.6V16.6C11.6 13.9 10.7 11.6 8.6 10.2Z" fill="none" stroke="rgba(0,0,0,.3)" stroke-width=".8" stroke-linejoin="round"/></svg>`;
+  function legNums(l, B) {
+    if (!B) return null;
+    const over = l.side !== 'under';
+    if (l.type === 'player') { const P = B.players[nm(l.player)]; if (!P) return null; const L = fnum(l.line); return { cur: statOf(P, l.stat), need: over ? Math.floor(L) + 1 : L, over }; }
+    if (l.type === 'game_total' || l.type === 'team_total') {
+      const home = l.team === 'home', qs = PER_Q[l.period || 'ft'] || PER_Q.ft, ft = (l.period || 'ft') === 'ft';
+      const sum = s => !s ? 0 : ft ? s.score : qs.reduce((a, q) => a + (s.ls[q - 1] || 0), 0);
+      const cur = l.type === 'game_total' ? sum(B.sides.home) + sum(B.sides.away) : sum(B.sides[home ? 'home' : 'away']);
+      return { cur, need: fnum(l.line), over };
+    }
+    return null;
+  }
+  function ltRow(x, multiG) {
+    const l = x.l, g = x.g, ev = x.ev, side = l.team === 'home' ? 'home' : 'away', ab = g ? (side === 'home' ? g.home : g.away) : '';
+    const c = TCOL[ab] || ['#55607a', '#c9d1e0'];
+    const who = l.type === 'player' ? l.player : l.type === 'game_total' ? (g ? tname(g.away) + ' vs ' + tname(g.home) : 'Game total') : (g ? tname(ab) : '');
+    const st = (STAT[l.stat] || STAT.points)[0], L = fnum(l.line);
+    const desc = l.type === 'player' ? (l.side === 'under' ? 'Under ' + l.line + ' ' + st : (Math.floor(L) + 1) + '+ ' + st) : title(l).replace(who, '').trim() || title(l);
+    const B = g && (TEST.on && TEST.ids.includes(g.id) ? testBox(g) : LT.box[g.id]);
+    const n = ev.st === 'preview' ? null : legNums(l, B);
+    const ICON = { landed: ['Won', '✓'], lost: ['Lost', '✕'], track: ['On track', ''], behind: ['Behind pace', ''], trouble: ['In trouble', '!'], wait: ['Not started', ''], preview: ['Live preview', ''], none: ['', ''] }[ev.st] || ['', ''];
+    let rail = '';
+    if (ev.st === 'preview') rail = '<div class="ltrail skel" aria-hidden="true"><span class="tr"></span><span class="fl"></span></div>';
+    else if (n && n.need) {
+      const done = ev.st === 'landed' && n.over, f = Math.max(0, Math.min(1, n.cur / n.need)), pos = done ? 100 : Math.max(5, Math.min(88, f * 100));
+      rail = `<div class="ltrail${done ? ' done' : ''}" aria-label="${n.cur} of ${n.need}"><span class="tr"></span><span class="fl" style="width:${done ? 100 : f * 100}%"></span><span class="pv" style="left:${pos}%">${n.cur}</span><span class="tg">${n.over ? n.need : 'U ' + n.need}</span></div>`;
+    }
+    const meta = ev.st === 'preview' ? ev.text : n ? (/on pace for \d+/.exec(ev.text || '') || [''])[0] + (/\d+ min/.exec(ev.text || '') ? ' · ' + /\d+ min/.exec(ev.text)[0] : '') : ev.text;
+    const status = `<span class="ltst">${ICON[0]}${ICON[1] ? `<span class="ic" aria-hidden="true"><b>${ICON[1]}</b></span>` : ''}</span>`;
+    return `<li class="lt-${ev.st}${LT.flash && LT.flash.has(l.id) ? ' flash' : ''}">${JERSEY(c[0], c[1] || '#fff')}<div class="ltb"><strong>${esc(who)}${ab && l.type !== 'game_total' ? ' ' + tb(ab) : ''}</strong><span class="ltdesc">${esc(desc)}${multiG && g && l.type === 'player' ? ' · ' + esc(g.away + ' vs ' + g.home) : ''}</span><div class="ltrow">${rail}${status}</div>${meta ? `<span class="ltmeta">${esc(meta.replace(/^ · /, ''))}</span>` : ''}</div></li>`;
+  }
+  function renderTracker() {
+    if (!LT) return;
+    const panel = $('ltPanel'); if (!panel) return;
+    const legs = slipLegs(), games = ltGames(), active = games.filter(ltWindow);
+    if (!legs.length || !active.length) { panel.hidden = true; return; }
+    panel.hidden = false;
+    const preview = IN_CLAUDE && !TEST.on;
+    const rows = legs.map(l => {
+      const g = gameOf(l), r = rate(l), B = g && (TEST.on && TEST.ids.includes(g.id) ? testBox(g) : LT.box[g.id]);
+      let ev;
+      if (!g) ev = { st: 'none', text: '', frac: 0 };
+      else if (preview) ev = g.time && startOf(g) <= Date.now() ? { st: 'preview', text: 'Live progress for this leg shows on the website', frac: .4 } : { st: 'wait', text: 'Starts ' + startOf(g).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }), frac: 0 };
+      else if (!B) ev = g.time && startOf(g) > Date.now() ? { st: 'wait', text: 'Starts ' + startOf(g).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }), frac: 0 } : { st: 'wait', text: 'Checking the box score…', frac: 0 };
+      else ev = evalLeg(l, r, B, g);
+      return { l, g, ev };
+    });
+    // Flash a leg the moment it slips into trouble or is lost.
+    const flash = new Set();
+    LT.flash = flash;
+    rows.forEach(x => { const was = LT.prev[x.l.id]; if (was && was !== x.ev.st && (x.ev.st === 'trouble' || x.ev.st === 'lost')) flash.add(x.l.id); LT.prev[x.l.id] = x.ev.st; });
+    const cnt = st => rows.filter(x => x.ev.st === st).length;
+    const lost = rows.filter(x => x.ev.st === 'lost'), all = rows.length;
+    const sum = $('ltSum');
+    sum.className = 'ltsum' + (lost.length ? ' lost' : cnt('landed') === all ? ' won' : '');
+    sum.textContent = preview ? 'Live tracking preview: each leg\'s progress fills in on the website.'
+      : lost.length ? 'Multi lost: ' + lost.map(x => title(x.l)).join(', ') + (lost.length > 1 ? ' fell short.' : ' fell short.')
+      : cnt('landed') === all ? 'Every leg has landed.'
+      : [[cnt('landed'), 'landed'], [cnt('track'), 'on track'], [cnt('behind'), 'behind pace'], [cnt('trouble'), 'in trouble'], [cnt('wait'), 'not started']].filter(x => x[0]).map(x => x[0] + ' ' + x[1]).join(' · ');
+    const multiG = games.length > 1;
+    $('ltLegs').innerHTML = rows.map(x => ltRow(x, multiG)).join('');
+    const ages = active.map(g => LT.box[g.id]).filter(Boolean).map(b => b.at);
+    $('ltNote').textContent = TEST.on ? 'Test preview: made-up box scores, one game minute every 2 seconds.' : preview ? 'This is your multi from below. On the website, each leg updates every 30 seconds during the game.'
+      : LT.err ? 'Couldn\'t reach the live box score just now. Retrying.' : ages.length ? 'Updated ' + new Date(Math.min(...ages)).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '. Refreshes every 30 seconds while games are on.' : '';
+    $('ltRefresh').hidden = preview;
+  }
+  async function pollTracker() {
+    if (!LT || IN_CLAUDE) return;
+    if (LT.busy) { LT.again = true; return; }
+    clearTimeout(LT.timer);
+    const games = ltGames().filter(ltWindow).filter(g => g.time && startOf(g).getTime() <= Date.now() + 5 * 60e3 && !(LT.box[g.id] && LT.box[g.id].final));
+    if (games.length) {
+      LT.busy = true; LT.err = '';
+      await Promise.all(games.map(async g => { try { const r = await fetch(ESPN_SUM + encodeURIComponent(g.id) + '&_=' + Math.floor(Date.now() / 15000), { cache: 'no-store' }); if (!r.ok) throw new Error('HTTP ' + r.status); LT.box[g.id] = parseSummary(await r.json()); } catch (e) { LT.err = String(e && e.message || e); } }));
+      LT.busy = false;
+      if (LT.again) { LT.again = false; return pollTracker(); }
+    }
+    renderTracker();
+    const anyLive = ltGames().some(g => ltWindow(g) && !(LT.box[g.id] && LT.box[g.id].final));
+    LT.timer = setTimeout(pollTracker, document.hidden ? 120e3 : anyLive ? 30e3 : 300e3);
+  }
+
   // ---- data files written by the GitHub updater ----
   async function getJSON(name) {
     const r = await fetch('data/' + name + '?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
@@ -2276,6 +2821,14 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
     save(POOL_KEY, open);
   }
   $('poolToggle').addEventListener('click', () => setPool($('poolBody').hidden));
+  const SLATE_KEY = 'legroom-slate-open';
+  function setSlate(open, remember) {
+    $('slateBody').hidden = !open; $('prunePast').hidden = !open;
+    $('slateToggle').setAttribute('aria-expanded', String(open)); $('slateToggle').textContent = open ? 'Hide' : 'Show';
+    if (remember) save(SLATE_KEY, open);
+  }
+  { const v = load(SLATE_KEY); setSlate(v == null ? !matchMedia('(min-width: 1100px)').matches : !!v, false); }
+  $('slateToggle').addEventListener('click', () => setSlate($('slateBody').hidden, true));
   setPool(!!load(POOL_KEY));
 
   $('trackToggle').addEventListener('click', () => { const open = $('trackBody').hidden; $('trackBody').hidden = !open; $('trackToggle').setAttribute('aria-expanded', String(open)); $('trackToggle').textContent = open ? 'Hide' : 'Show'; });
@@ -2284,8 +2837,30 @@ footer p { margin: 0 0 6px; max-width: 66ch; }
   renderAll();
   renderTrack();
   if (window.__LR_TEST_SCORES) onScores(window.__LR_TEST_SCORES);
-  try { if (/debug/.test(location.search)) window.__LR = { auto: () => AUTO, role: recentRole, fat: fatigueOf, games: gamesList, sim: simulate, joint, rate }; } catch (e) {}
+  try { if (/debug/.test(location.search)) window.__LR = { auto: () => AUTO, role: recentRole, fat: fatigueOf, games: gamesList, sim: simulate, joint, rate, evalLeg, parseSummary }; } catch (e) {}
+  $('ltRefresh').addEventListener('click', () => { LT.box = {}; pollTracker(); });
+  function setTest(on) {
+    TEST.on = on; clearInterval(TEST.timer);
+    const b = $('testLiveBtn'); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Stop test' : 'Test live preview';
+    if (on) {
+      TEST.t0 = Date.now();
+      const up = nextSlate().length ? nextSlate() : gamesList().filter(g => g.time && startOf(g) > Date.now());
+      TEST.ids = up.slice(0, 3).map(g => g.id);
+      // Put a multi in the tracker if yours is empty: the first test game's top legs.
+      if (!slipLegs().length && TEST.ids[0]) { const legs = ratedLegs(l => l.gameId === TEST.ids[0]).filter(x => x.r.p >= .45).sort((a, b) => legScore(b) - legScore(a)); const seen = {}; slip.ids = legs.filter(x => { const k = nm(x.leg.player || x.leg.type); if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, 4).map(x => x.leg.id); slip.mode = 'sgm'; TEST.filled = true; saveSlip(); }
+      $('testNote').textContent = 'Running: ' + TEST.ids.map(id => { const g = gamesList().find(x => x.id === id); return g ? g.away + ' vs ' + g.home : ''; }).join(', ') + '. Each game finishes in about a minute; press Stop test to end.' + (TEST.filled ? ' Your multi was empty, so it now holds four legs from the first game to show the tracker.' : '');
+      TEST.timer = setInterval(() => { renderGames(); renderTracker(); }, 2000);
+    } else {
+      if (TEST.filled) { slip.ids = []; saveSlip(); TEST.filled = false; }
+      $('testNote').textContent = 'Fakes three of the next games being played so you can check the live banner, game cards, matchup panel and leg tracker. Scores are made up.';
+    }
+    renderAll(); renderTracker();
+  }
+  $('testLiveBtn').addEventListener('click', () => setTest(!TEST.on));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !IN_CLAUDE) pollTracker(); });
+  setInterval(() => { try { renderTracker(); } catch (e) {} }, 60e3);
   if (IN_CLAUDE) {
+    $('devBar').hidden = false;
     connectStore(); connectSample();
     liveStatus('Live tracking preview: games in progress are marked LIVE here, and the scores fill in on the website.', null, false);
     setInterval(() => renderGames(), 60e3);
