@@ -182,6 +182,15 @@ def box(eid):
             if row['min'] == 0 and row['pts'] == 0 and row['reb'] == 0 and row['ast'] == 0:
                 continue
             players[sd].append(row)
+    # Team turnovers (shot clock, 8-second and similar) aren't in the player totals.
+    for bt in (s.get('boxscore') or {}).get('teams') or []:
+        sd = which.get(std((bt.get('team') or {}).get('abbreviation')))
+        if sd in team:
+            vals = {x.get('name'): x.get('displayValue') for x in bt.get('statistics') or []}
+            try:
+                team[sd]['ttov'] = int(float(vals.get('teamTurnovers') or 0))
+            except Exception:  # noqa: BLE001
+                team[sd]['ttov'] = 0
     d = start.astimezone(ADL).date().isoformat()
     return d, {'id': eid, 'away': side['away']['abbr'], 'home': side['home']['abbr'], 'date': d,
                'score': {'away': side['away']['score'], 'home': side['home']['score']}, 'periods': periods, 'players': players,
@@ -254,7 +263,7 @@ def update_results(results, now):
     refetched = 0
     for dd in sorted(results):
         for g in list(results[dd].get('games', [])):
-            if g.get('team') or not g.get('id') or refetched >= 250:
+            if (g.get('team') and 'ttov' in (g['team'].get('away') or {})) or not g.get('id') or refetched >= 250:
                 continue
             try:
                 _, g2 = box(g['id'])
@@ -266,7 +275,7 @@ def update_results(results, now):
                 print('team totals failed', g.get('id'), e)
                 fails += 1
     total = sum(len(r.get('games', [])) for r in results.values())
-    log('results', f'ok: {added} new games, {total} stored' + (f', team totals added to {refetched}' if refetched else '') + (f', {fails} fetches failed' if fails else ''))
+    log('results', f'ok: {added} new games, {total} stored' + (f', team totals updated for {refetched}' if refetched else '') + (f', {fails} fetches failed' if fails else ''))
     return results
 
 
@@ -454,8 +463,11 @@ def build_slate(results, players, inj, old, now):
 
 
 # ---------- team ratings (from our own box scores) ----------
-def possessions(t):
-    return t['fga'] - t['orb'] + t['tov'] + 0.44 * t['fta']
+def possessions(t, o):
+    """Basketball Reference's possession estimate (offensive rebounds weighted by rebound share)."""
+    odrb = max(0, o['reb'] - o['orb'])
+    orbp = t['orb'] / max(1, t['orb'] + odrb)
+    return t['fga'] + 0.4 * t['fta'] - 1.07 * orbp * (t['fga'] - t['fgm']) + t['tov'] + t.get('ttov', 0)
 
 
 def team_ratings(results, old):
@@ -467,7 +479,7 @@ def team_ratings(results, old):
             if not tm.get('away') or not tm.get('home'):
                 continue
             mins = 48 + 5 * max(0, len(g.get('periods') or {}) - 4)
-            poss = (possessions(tm['away']) + possessions(tm['home'])) / 2
+            poss = (possessions(tm['away'], tm['home']) + possessions(tm['home'], tm['away'])) / 2
             if poss <= 50:
                 continue
             for sd, op in (('away', 'home'), ('home', 'away')):
@@ -490,15 +502,19 @@ def team_ratings(results, old):
         log('teams', f'kept previous ratings (only {len(teams)} teams have box score totals yet)')
         return old
     # Side-by-side check against the previous ratings (the last Basketball Reference pull) the first time.
-    if old and old.get('source') == 'Basketball Reference':
+    prev = load('status.json', {})
+    snap = old.get('teams') if old and old.get('source') == 'Basketball Reference' else prev.get('ratingsBRSnapshot')
+    if snap:
         diffs = {k: [] for k in ('pace', 'ortg', 'drtg')}
         for ab, t in teams.items():
-            o = (old.get('teams') or {}).get(ab) or {}
+            o = snap.get(ab) or {}
+            if o.get('g') and t.get('g') != o.get('g'):
+                continue
             for k in diffs:
                 if o.get(k) and t.get(k):
                     diffs[k].append(abs(o[k] - t[k]))
         STATUS['ratingsVsBR'] = {k: {'meanDiff': round(sum(v) / len(v), 2), 'maxDiff': round(max(v), 2)} for k, v in diffs.items() if v}
-        STATUS['ratingsBRSnapshot'] = old.get('teams')
+        STATUS['ratingsBRSnapshot'] = snap
     log('teams', f'ok: {len(teams)} teams from our box scores')
     return {'asOf': datetime.now(ADL).strftime('%-d %b'), 'source': 'Leg Room box scores', 'teams': teams}
 
