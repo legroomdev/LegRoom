@@ -160,6 +160,11 @@ details.form form { margin-top: 12px; }
 .ltmb { padding: 0 12px 4px 12px; border-top: 1px solid var(--line); }
 .ltmb .ltsum { margin: 10px 0 2px; font-size: .9rem; }
 .ltundo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); margin: 0 0 10px; }
+.imp { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin: 2px 0 12px; }
+.imp label.btn { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.imp .help { margin: 0; flex: 1 1 220px; min-width: 0; }
+.imp .help.ok { color: var(--good); } .imp .help.err { color: var(--bad); }
+.impcmp { display: block; margin-top: 4px; color: var(--ink); }
 .trkrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .trkrow .help { margin: 0; }
 .livebar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; font-size: .85rem; color: var(--muted); margin: 0 0 12px; }
@@ -492,6 +497,10 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   <section class="o-build panel" aria-labelledby="buildh">
     <h2 id="buildh">Build it for me</h2>
     <p class="help">Choose how many legs and a risk level, and Leg Room builds the multi with the reasons behind every leg. Risk sets how hard each leg is. Games that have started are left out. SGM mode uses one game; multi-game mode takes the strongest leg from each game. Trap spots and luck markets are left out.</p>
+    <div class="seg" role="group" aria-label="Build a Same Game Multi or a multi-game multi">
+      <button type="button" data-mode="sgm" aria-pressed="true">Same Game Multi</button>
+      <button type="button" data-mode="multi" aria-pressed="false">Multi-game</button>
+    </div>
     <div class="grid2">
       <div class="field full" id="sugGameF"><label class="label" for="sugGame">Game</label><select id="sugGame"></select></div>
     </div>
@@ -623,6 +632,12 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   </section>
   <section class="o-slip panel" aria-labelledby="sliph">
     <div class="phead"><h2 id="sliph">Your multi</h2><button class="btn small" type="button" id="clearSlip">Clear</button></div>
+    <div class="imp" id="impBox" hidden>
+      <label class="btn small" for="impShots" id="impLbl"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 12.5h11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Import from Sportsbet</label>
+      <input type="file" id="impShots" accept="image/*" multiple hidden>
+      <button class="btn small" type="button" id="impStop" hidden>Stop</button>
+      <p class="help" id="impMsg">Screenshot your bet slip or the bet in My Bets, and Leg Room loads it here to rate and track.</p>
+    </div>
     <div class="seg" role="group" aria-label="Multi type">
       <button type="button" data-mode="sgm" aria-pressed="true">Same Game Multi</button>
       <button type="button" data-mode="multi" aria-pressed="false">Multi-game</button>
@@ -640,6 +655,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
+  const IN_CLAUDE_EARLY = () => !!(window.claude && window.claude.use);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fnum = v => { if (v === '' || v == null) return null; const x = parseFloat(v); return isFinite(x) ? x : null; };
   const pos = v => { const x = fnum(v); return x != null && x > 0 ? x : null; };
@@ -811,7 +827,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   }
   const gamesList = () => { const v = view(); return Object.keys(v).filter(id => v[id] && v[id].kind === 'game').map(id => withAuto(id, v[id])); };
   let AUTO = [];
-  const legsList = () => { const v = view(); return Object.keys(v).filter(id => v[id] && v[id].kind === 'leg' && v[id].gameId).map(id => Object.assign({ id }, v[id])).filter(l => v[l.gameId]).concat(AUTO); };
+  const legsList = () => { const v = view(); return Object.keys(v).filter(id => v[id] && v[id].kind === 'leg' && v[id].gameId).map(id => Object.assign({ id }, v[id])).filter(l => v[l.gameId]).concat(AUTO, IMPORTED.filter(l => !AUTO.some(a => a.gameId === l.gameId && a.player === l.player && a.stat === l.stat && a.line === l.line && a.side === l.side))); };
   const gameOf = l => { const v = view(); const g = v[l.gameId]; return g ? withAuto(l.gameId, g) : null; };
   const legById = id => legsList().find(l => l.id === id);
 
@@ -1141,12 +1157,14 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   const matchup = g => g ? tname(g.away) + ' vs ' + tname(g.home) : '';
 
   // ---- correlation simulation ----
+  // How strongly the game's pace and scoreline tie different players together (1 = original strength).
+  const XLINK = 1;   // tested 0.6 and 0.8 on 7 Nov: no better overall
   function loads(l) {
     const sg = l.team === 'home' ? 1 : -1;
     const dir = (l.type === 'line' || l.type === 'h2h' || l.type === 'margin' || l.type === 'luck') ? 1 : (l.side === 'under' ? -1 : 1);
     const f = Math.sqrt(shareOf(l));
     let T = 0, M = 0, P = 0;
-    if (l.type === 'player') { const x = LOAD[l.stat] || LOAD.points; T = x[0]; M = x[1] * sg; P = x[2]; }
+    if (l.type === 'player') { const x = LOAD[l.stat] || LOAD.points, k = typeof window.__XS === 'number' ? window.__XS : XLINK; T = x[0] * k; M = x[1] * sg * k; P = x[2]; }
     else if (l.type === 'team_total') { T = .75 * f; M = .45 * sg * f; }
     else if (l.type === 'game_total') { T = .95 * f; }
     else if (l.type === 'margin') { const lo = fnum(l.lo) || 1; M = (lo >= 11 ? .7 : lo >= 6 ? .5 : .25) * sg * f; }
@@ -1564,7 +1582,9 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     const keep = (id, html) => { const el = $(id), v = el.value; el.innerHTML = html; if ([...el.options].some(o => o.value === v)) el.value = v; };
     keep('poolGame', '<option value="all">All games</option>' + opts);
     keep('lGame', opts || '<option value="">Add a game first</option>');
-    keep('sugGame', opts || '<option value="">Add a game first</option>');
+    // Build it for me only offers games that haven't tipped off, and moves on when the chosen one starts.
+    const up = games.filter(g => !(g.time && startOf(g) <= Date.now()));
+    keep('sugGame', (up.length ? up : games).map(g => `<option value="${g.id}">${esc(matchup(g))}</option>`).join('') || '<option value="">Add a game first</option>');
     fillTeamSelect();
   }
   function fillTeamSelect() {
@@ -1585,7 +1605,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     return out;
   }
   function buildAuto() {
-    AUTO = [];
+    AUTO = []; TEMPL = {}; IMPORTED = [];
     if (showingExample()) return;
     gamesList().forEach(g => {
       const d = autoOf(g); if (!d) return;
@@ -1651,6 +1671,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
             const usageAdd = SK[stat].reduce((a, k) => a + ((extra[k] || {})[p.name] || 0), 0);
             const proj0 = avg * ratio + usageAdd;
             const cvs = playerCV(p.name, stat);
+            TEMPL[g.id + '|' + nm(p.name) + '|' + stat] = { g, side, p, stat, avg, cur, bl, status, role, mins, pm, minWhy: minWhy[p.name] || [], proj0, usageAdd, outStars, cvs };
             const tried = LADDER[stat].map(x => {
               const leg = { kind: 'leg', id: 'a_' + g.id + '_' + side + '_' + nm(p.name) + '_' + stat + '_' + x, gameId: g.id, auto: true, market: STAT_MS[stat], type: 'player', period: 'ft', team: side, player: p.name, pos: p.pos || ((LOGS[nm(p.name)] || []).find(r => r.pos) || {}).pos || '', stat, side: 'over', line: String(x - 0.5), avg: String(Math.round(avg * 10) / 10), cur: Math.round(cur * 10) / 10, last: bl.last != null ? Math.round(bl.last * 10) / 10 : null, lastW: bl.w || 0, gp: p.gp, status, role, mins, projMin: Math.round(pm * 10) / 10, minWhy: minWhy[p.name] || [], proj0, usageAdd: Math.round(usageAdd * 10) / 10, usage: usageAdd >= .5, usageFrom: outStars, odds: '' };
               if (cvs) Object.assign(leg, cvs);
@@ -1679,6 +1700,20 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
       }
     });
     AUTO = AUTO.filter(l => { const r = rate(l); return r && r.p != null && r.p <= 0.9; });
+    IMPORTED = impSpecs.map(mkImported).filter(Boolean);
+  }
+  // ---- imported legs: any line on any player Leg Room has data for, rated like its own legs ----
+  let TEMPL = {}, IMPORTED = [];
+  const IMP_KEY = 'legroom-imported-v1';
+  let impSpecs = (load(IMP_KEY) || []).filter(x => x && x.gameId && x.player && x.stat);
+  function mkImported(sp) {
+    const T = TEMPL[sp.gameId + '|' + nm(sp.player) + '|' + sp.stat]; if (!T) return null;
+    const L = fnum(sp.line); if (L == null) return null;
+    const { p } = T, x = Math.floor(L) + 1;
+    const leg = { kind: 'leg', id: 'i_' + sp.gameId + '_' + nm(p.name) + '_' + sp.stat + '_' + (sp.side || 'over') + '_' + L, gameId: sp.gameId, auto: true, imported: true, market: STAT_MS[sp.stat], type: 'player', period: 'ft', team: T.side, player: p.name, pos: p.pos || ((LOGS[nm(p.name)] || []).find(r => r.pos) || {}).pos || '', stat: sp.stat, side: sp.side === 'under' ? 'under' : 'over', line: String(L), avg: String(Math.round(T.avg * 10) / 10), cur: Math.round(T.cur * 10) / 10, last: T.bl.last != null ? Math.round(T.bl.last * 10) / 10 : null, lastW: T.bl.w || 0, gp: p.gp, status: T.status, role: T.role, mins: T.mins, projMin: Math.round(T.pm * 10) / 10, minWhy: T.minWhy, proj0: T.proj0, usageAdd: Math.round(T.usageAdd * 10) / 10, usage: T.usageAdd >= .5, usageFrom: T.outStars, odds: '' };
+    if (T.cvs) Object.assign(leg, T.cvs);
+    const hr = recentHits(p.name, sp.stat, x - 0.5); if (hr) { leg.hits = String(hr[0]); leg.of = String(hr[1]); }
+    return leg;
   }
 
   // ---- box score history (shared; the morning task adds yesterday's games) ----
@@ -2045,7 +2080,13 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   $('poolSort').addEventListener('change', renderLegs);
 
   // ---- slip controls ----
-  document.querySelectorAll('.seg button[data-mode]').forEach(b => b.addEventListener('click', () => { slip.mode = b.dataset.mode; saveSlip(); renderSlip(); $('sugGameF').hidden = slip.mode !== 'sgm'; }));
+  // Two switches (Your multi, and Build it for me) share one setting; changing it rebuilds any suggestions on show.
+  document.querySelectorAll('.seg button[data-mode]').forEach(b => b.addEventListener('click', () => {
+    if (slip.mode === b.dataset.mode) return;
+    slip.mode = b.dataset.mode; saveSlip(); renderSlip(); $('sugGameF').hidden = slip.mode !== 'sgm';
+    document.querySelectorAll('.seg button[data-mode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === slip.mode)));
+    if (lastTier) { working('sugs'); setTimeout(buildSugs, 30); }
+  }));
   $('slipLegs').addEventListener('click', e => { const b = e.target.closest('[data-unslip]'); if (!b) return; slip.ids = slip.ids.filter(x => x !== b.dataset.unslip); saveSlip(); renderLegs(); renderSlip(); });
   $('clearSlip').addEventListener('click', () => { slip.ids = []; slip.price = ''; saveSlip(); renderLegs(); renderSlip(); });
 
@@ -2395,10 +2436,11 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     try { sampleFn = await window.claude.use('sample'); } catch (e) { sampleFn = null; }
     if (!sampleFn) return;
     try { const l = await sampleFn.limits(); imgLimits = (l && l.images) || null; } catch (e) { imgLimits = null; }
-    if (imgLimits) $('shots').accept = imgLimits.mediaTypes.join(',');
+    if (imgLimits) { $('shots').accept = imgLimits.mediaTypes.join(','); $('impShots').accept = imgLimits.mediaTypes.join(','); $('impBox').hidden = false; }
     else { $('shots').hidden = true; $('shotsLbl').hidden = true; $('fillBtn').textContent = 'Read text'; $('quickHelp').textContent = 'Copy the markets from a betting or stats site and paste them here. Claude adds the games and legs for you.'; }
     $('quick').hidden = false;
   }
+  if (!IN_CLAUDE_EARLY()) { const ib = $('impBox'); if (ib) ib.hidden = false; }
   function renderShots() {
     shotUrls.forEach(u => URL.revokeObjectURL(u)); shotUrls = shots.map(f => URL.createObjectURL(f));
     $('shotList').innerHTML = shots.length ? shotUrls.map((u, i) => `<img src="${u}" alt="Screenshot ${i + 1}">`).join('') + '<button type="button" id="clearShots">Remove</button>' : '';
@@ -2492,6 +2534,202 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
     } finally { $('fillBtn').disabled = false; $('stopBtn').hidden = true; fillCtl = null; }
   });
   $('stopBtn').addEventListener('click', () => { if (fillCtl) fillCtl.abort(); });
+
+  // ---- import a Sportsbet multi from screenshots ----
+  let impCtl = null;
+  const imsg = (t, cls) => { const el = $('impMsg'); el.innerHTML = t; el.className = 'help' + (cls ? ' ' + cls : ''); };
+  function impPrompt() {
+    const gs = gamesList().filter(g => g.date >= ymd(new Date(Date.now() - 864e5))).map(g => g.away + ' vs ' + g.home + ' (' + g.date + ')').join('; ');
+    return [
+      'The attached screenshot(s) show one NBA bet from the Sportsbet app (Australia): a Same Game Multi, a multi, or a multi containing Same Game Multis, from the bet slip or My Bets. The screenshots may overlap; list each leg once.',
+      'Games on Leg Room\'s slate (away vs home): ' + (gs || 'unknown') + '.',
+      'Reply with only JSON in exactly this shape:',
+      '{"legs":[{"away":string|null,"home":string|null,"type":"player"|"team_total"|"game_total"|"line"|"h2h"|"margin","period":"ft"|"1h"|"2h"|"q1"|"q2"|"q3"|"q4","team":string|null,"player":string|null,"stat":"points"|"rebounds"|"assists"|"threes"|"pra"|"pr"|"pa"|"ra"|"steals"|"blocks"|"dd"|"td"|null,"side":"over"|"under"|null,"line":number|null,"lo":number|null,"hi":number|null,"text":string}]}',
+      'Rules: Use team abbreviations or names as shown; fill away and home from the matchup header the leg sits under, using the slate above to get the order right. A milestone like "To Score 25+ Points" or "25+ Points" is side "over" with line 24.5; "Over 22.5 Points" is over 22.5; "3+ Made Threes" is threes over 2.5; "Points + Rebounds + Assists 30+" is pra over 29.5; "Points + Rebounds" is pr, "Points + Assists" is pa, "Rebounds + Assists" is ra; "To Record a Double Double" is dd. "Head to Head"/"Win" is h2h with team the pick. A handicap like "Lakers -4.5" is type line, team Lakers, line -4.5. Game totals "Over 220.5" are game_total. text is the leg exactly as written.'
+    ].join('\n');
+  }
+  function findGameFor(away, home, player) {
+    const gl = gamesList().filter(g => g.date >= ymd(new Date(Date.now() - 864e5)));
+    const a = matchTeam(away), h = matchTeam(home);
+    let g = gl.find(x => x.away === a && x.home === h) || gl.find(x => x.away === h && x.home === a);
+    if (!g && (a || h)) g = gl.find(x => [x.away, x.home].includes(a || h));
+    if (!g && player) g = gl.find(x => { const d = autoOf(x); return d && d.players && ['away', 'home'].some(sd => (d.players[sd] || []).some(p => nameLike(p.name, player))); });
+    return g || null;
+  }
+  const nameLike = (a, b) => { const x = nm(a), y = nm(b); if (!x || !y) return false; if (x === y) return true; const la = String(a).trim().split(/\s+/).pop(), lb = String(b).trim().split(/\s+/).pop(); return nm(la) === nm(lb) && (x.startsWith(y.slice(0, 1)) || y.startsWith(x.slice(0, 1))); };
+  // Edit distance, for names read from a screenshot with a letter or two wrong.
+  function lev(a, b) { const m = a.length, n = b.length; if (!m || !n) return m || n; let prev = Array.from({ length: n + 1 }, (_, j) => j); for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; }
+  // How well a roster name matches text that may carry stray characters around it: 1 is exact.
+  function nameScore(name, text) {
+    const a = nm(name), t = nm(text); if (!a || !t) return 0;
+    if (t.includes(a)) return 1;
+    let best = 0;
+    for (let w = Math.max(3, a.length - 2); w <= a.length + 2; w++) for (let i = 0; i + w <= t.length || (i === 0 && w > t.length); i++) { const sub = t.slice(i, i + w); best = Math.max(best, 1 - lev(a, sub) / Math.max(a.length, sub.length)); if (i + w >= t.length) break; }
+    return best;
+  }
+  function rosterName(g, player) {
+    const d = autoOf(g); if (!d || !d.players) return null;
+    for (const sd of ['away', 'home']) { const p = (d.players[sd] || []).find(q => nameLike(q.name, player)); if (p) return { name: p.name, side: sd, row: p }; }
+    let best = null;
+    for (const sd of ['away', 'home']) (d.players[sd] || []).forEach(q => { const sc = nameScore(q.name, player); if (sc >= .8 && (!best || sc > best.sc)) best = { name: q.name, side: sd, row: q, sc }; });
+    return best;
+  }
+  // A leg Leg Room can't model at its exact line (team markets, rare player markets) is added as one of your own legs.
+  function ownLeg(x, g, rn) {
+    const type = x.type, period = PERIODS[x.period] ? x.period : 'ft';
+    const t = matchTeam(x.team), team = t === g.home ? 'home' : t === g.away ? 'away' : (type === 'game_total' ? '' : rn ? rn.side : null);
+    if (team === null) return null;
+    const yes = type === 'player' && (x.stat === 'dd' || x.stat === 'td');
+    if (['player', 'team_total', 'game_total', 'line'].includes(type) && !yes && fnum(x.line) == null) return null;
+    if (type === 'margin' && fnum(x.lo) == null) return null;
+    materialize(g.id);
+    const obj = { kind: 'leg', gameId: g.id, type, period, team, side: x.side === 'under' ? 'under' : 'over', line: (type === 'h2h' || type === 'margin' || yes) ? '' : String(x.line), odds: '' };
+    if (type === 'margin') { obj.lo = String(x.lo); obj.hi = fnum(x.hi) != null ? String(x.hi) : ''; }
+    if (type === 'player') {
+      const st = STAT[x.stat] ? x.stat : 'points', r = rn && rn.row, A = r ? { points: r.pts, rebounds: r.reb, assists: r.ast, threes: r.thr, steals: r.stl, blocks: r.blk, pra: (r.pts || 0) + (r.reb || 0) + (r.ast || 0), pr: (r.pts || 0) + (r.reb || 0), pa: (r.pts || 0) + (r.ast || 0), ra: (r.reb || 0) + (r.ast || 0) }[st] : null;
+      Object.assign(obj, { player: rn ? rn.name : String(x.player).trim(), stat: st, avg: A > 0 ? String(Math.round(A * 10) / 10) : '', hits: '', of: '', status: 'ok', usage: false });
+    }
+    const dupe = Object.keys(items).find(id => { const y = items[id]; return y.kind === 'leg' && y.gameId === g.id && y.type === obj.type && (y.period || 'ft') === obj.period && y.team === obj.team && y.side === obj.side && String(y.line) === obj.line && String(y.player || '') === String(obj.player || '') && String(y.stat || '') === String(obj.stat || '') && String(y.lo || '') === String(obj.lo || ''); });
+    if (dupe) return dupe;
+    const id = newId('l'); putItem(id, obj); return id;
+  }
+  function applyImport(d) {
+    if (!d || !Array.isArray(d.legs) || !d.legs.length) throw { code: 'no_legs' };
+    const ids = [], missed = [], specs = [];
+    d.legs.forEach(x => {
+      const label = String(x.text || [x.player, x.stat, x.line].filter(Boolean).join(' ')).slice(0, 80);
+      const g = findGameFor(x.away, x.home, x.type === 'player' ? x.player : null);
+      if (!g) { missed.push(label + ' (game not on the slate)'); return; }
+      if (x.type === 'player') {
+        const rn = rosterName(g, x.player || '');
+        const L = fnum(x.line);
+        if (rn && LADDER[x.stat] && L != null && TEMPL[g.id + '|' + nm(rn.name) + '|' + x.stat]) {
+          const sp = { gameId: g.id, player: rn.name, stat: x.stat, line: L, side: x.side === 'under' ? 'under' : 'over' };
+          const same = AUTO.find(a => a.gameId === g.id && a.player === rn.name && a.stat === x.stat && fnum(a.line) === L && (a.side || 'over') === sp.side);
+          if (same) { ids.push(same.id); return; }
+          specs.push(sp); const leg = mkImported(sp); if (leg) { ids.push(leg.id); return; }
+        }
+        if (!rn) { missed.push(label + ' (player not found in ' + g.away + ' vs ' + g.home + ')'); return; }
+        const id = ownLeg(x, g, rn); if (id) ids.push(id); else missed.push(label);
+        return;
+      }
+      if (!['team_total', 'game_total', 'line', 'h2h', 'margin'].includes(x.type)) { missed.push(label + ' (market not supported)'); return; }
+      const id = ownLeg(x, g, null); if (id) ids.push(id); else missed.push(label);
+    });
+    if (specs.length) { const keep = impSpecs.filter(a => !specs.some(b => a.gameId === b.gameId && a.player === b.player && a.stat === b.stat && a.line === b.line && a.side === b.side)); impSpecs = keep.concat(specs).slice(-200); save(IMP_KEY, impSpecs); }
+    if (!ids.length) throw { code: 'no_match', missed };
+    invalidate(); buildAuto();
+    const uniq = [...new Set(ids)];
+    slip.ids = uniq; slip.mode = new Set(uniq.map(id => (legById(id) || {}).gameId)).size > 1 ? 'multi' : 'sgm'; saveSlip();
+    if (slip.mode === 'sgm') { const l = legById(uniq[0]); if (l) $('sugGame').value = l.gameId; }
+    $('sugGameF').hidden = slip.mode !== 'sgm';
+    document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === slip.mode)));
+    renderAll();
+    let t = 'Loaded ' + uniq.length + ' leg' + (uniq.length === 1 ? '' : 's') + (missed.length ? ' of ' + (uniq.length + missed.length) : '') + ' into Your multi. Tap Track this multi to follow it live.';
+    if (d.expected && d.expected > uniq.length + missed.length) t += '<span class="impcmp">The bet has ' + d.expected + ' legs but only ' + (uniq.length + missed.length) + ' showed in the screenshots. Add a screenshot covering the gap, or add the missing leg from the pool.</span>';
+    if (missed.length) t += '<span class="impcmp">Couldn\'t load: ' + missed.map(esc).join('; ') + '.</span>';
+    imsg(t, missed.length ? '' : 'ok');
+    $('sliph').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  // ---- reading Sportsbet's bet layout from screen text (website: text read on the device) ----
+  // Lines come in screen order. "... Same Game Multi @ ..." starts an SGM, "Away @ Home" sets the game,
+  // a player's name is followed by his market ("20+ Points", "To Record 25+ Pts + Reb + Ast").
+  const MKT = [[/pts\W*\+?\W*reb\W*\+?\W*ast/i, 'pra'], [/pts\W*\+?\W*reb/i, 'pr'], [/pts\W*\+?\W*ast/i, 'pa'], [/reb\W*\+?\W*ast/i, 'ra'], [/points|pts/i, 'points'], [/rebounds?|reb\b/i, 'rebounds'], [/assists?|ast\b/i, 'assists'], [/threes|3\W?pointers?|three\W?pointers?|made 3/i, 'threes'], [/steals?/i, 'steals'], [/blocks?/i, 'blocks']];
+  function parseMarket(t) {
+    if (/double\W*double/i.test(t)) return { stat: 'dd' };
+    if (/triple\W*double/i.test(t)) return { stat: 'td' };
+    const m = t.match(/(\d{1,2})\s*\+/); if (!m) return null;
+    const rest = t.slice(m.index + m[0].length), hit = MKT.find(x => x[0].test(rest)); if (!hit) return null;
+    return { stat: hit[1], line: +m[1] - .5 };
+  }
+  function parseSlip(lines) {
+    const gl = gamesList().filter(g => g.date >= ymd(new Date(Date.now() - 864e5)));
+    const legs = [], seen = {};
+    let game = null, player = null, sub = false, single = 0, pendN = 0;
+    const perGame = {};
+    lines.forEach(L => {
+      const t = String(L.text || '').replace(/[‘’“”|]/g, ' ').replace(/\s+/g, ' ').trim(); if (!t) return;
+      const head = t.match(/(?:(\d{1,2})\s*Legs?\s*)?Same\s*Game\s*Multi\s*@/i);
+      if (head) { pendN = +(head[1] || 0); player = null; sub = true; return; }
+      const legsLine = t.match(/^(\d{1,2})\s*Legs?\b/i); if (legsLine) { pendN = pendN || +legsLine[1]; if (!single) single = +legsLine[1]; return; }
+      const at = t.split(/\s@\s|\s@|@\s/);
+      if (at.length === 2) { const a = matchTeam(at[0]), h = matchTeam(at[1]); if (a && h) { game = gl.find(x => x.away === a && x.home === h) || gl.find(x => x.away === h && x.home === a) || { away: a, home: h, missing: true }; if (pendN) perGame[a + h] = pendN; pendN = 0; player = null; return; } }
+      const mk = parseMarket(t);
+      if (mk && !/cash out|stake|winnings|bet again/i.test(t)) {
+        if (!player) { if (sub) sub = false; return; }   // the SGM's summary line under its header
+        const key = (game ? game.away + game.home : '') + '|' + nm(player.name) + '|' + mk.stat + '|' + mk.line;
+        if (!seen[key]) { seen[key] = 1; legs.push({ away: game ? game.away : null, home: game ? game.home : null, type: 'player', period: 'ft', team: null, player: player.name, stat: mk.stat, side: 'over', line: mk.line != null ? mk.line : null, text: player.name + ' ' + t.replace(/^.*?(to (record|score)|\d)/i, m => m.match(/\d$/) ? m.slice(-1) : m.replace(/^.*?(to )/i, 'To ')) }); }
+        player = null; sub = false; return;
+      }
+      // A player's name: look for him in this game's roster (or any game's, before a matchup line).
+      const pool = game && !game.missing ? [game] : gl;
+      let best = null;
+      pool.forEach(g => { const d = autoOf(g); if (!d || !d.players) return; ['away', 'home'].forEach(sd => (d.players[sd] || []).forEach(q => { const sc = nameScore(q.name, t); if (sc >= .8 && (!best || sc > best.sc)) best = { name: q.name, sc, g }; })); });
+      if (best && t.length <= best.name.length + 14) { player = best; if (!game) game = best.g; sub = false; }
+    });
+    const expected = Math.max(single, Object.values(perGame).reduce((x, y) => x + y, 0));
+    return { legs, expected };
+  }
+  // Make a screenshot easier to read: three times bigger, greyscale, pale backgrounds to white.
+  async function prepShot(file) {
+    const bmp = await createImageBitmap(file), k = Math.min(3, 2400 / bmp.width), c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(bmp, 0, 0, c.width, c.height);
+    const im = x.getImageData(0, 0, c.width, c.height), d = im.data;
+    for (let i = 0; i < d.length; i += 4) { const v = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2], o = v > 165 ? 255 : v * .6; d[i] = d[i + 1] = d[i + 2] = o; }
+    x.putImageData(im, 0, 0); return c;
+  }
+  let ocrWorker = null;
+  async function ocrLines(files, onStep) {
+    if (!window.Tesseract) {
+      onStep('Getting the screenshot reader ready (first time only)…');
+      await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload = ok; sc.onerror = () => no({ code: 'ocr_load' }); document.head.appendChild(sc); });
+    }
+    if (!ocrWorker) ocrWorker = await window.Tesseract.createWorker('eng');
+    await ocrWorker.setParameters({ tessedit_pageseg_mode: '4' });
+    let all = [];
+    for (let i = 0; i < files.length; i++) {
+      onStep('Reading screenshot ' + (i + 1) + ' of ' + files.length + '…');
+      const c = await prepShot(files[i]), r = await ocrWorker.recognize(c);
+      const lines = ((r.data && r.data.lines) || []).map(l => ({ text: l.text, y: l.bbox ? l.bbox.y0 : 0 }));
+      all = all.concat((lines.length ? lines : String(r.data.text || '').split('\n').map((text, y) => ({ text, y }))).sort((a, b) => a.y - b.y));
+    }
+    return all;
+  }
+  $('impShots').addEventListener('change', async e => {
+    const max = (imgLimits && imgLimits.maxCount) || 6, files = Array.from(e.target.files || []).slice(0, max); e.target.value = '';
+    if (!files.length) return;
+    if (!sampleFn) {
+      $('impLbl').classList.add('busy');
+      try {
+        const lines = await ocrLines(files, t => imsg(t));
+        const res = parseSlip(lines);
+        if (!res.legs.length) throw { code: 'no_legs' };
+        applyImport(res);
+      } catch (err) {
+        const code = err && err.code;
+        if (code === 'no_legs') imsg('Couldn\'t find any legs in that. Use the bet in My Bets or the bet slip, with the player names and markets showing.', 'err');
+        else if (code === 'no_match') imsg('None of the legs matched games on Leg Room\'s slate' + (err.missed && err.missed.length ? ': ' + err.missed.map(esc).join('; ') : '') + '.', 'err');
+        else if (code === 'ocr_load') imsg('Couldn\'t load the screenshot reader. Check your connection and try again.', 'err');
+        else imsg('Something went wrong reading that. Try again.', 'err');
+      } finally { $('impLbl').classList.remove('busy'); }
+      return;
+    }
+    impCtl = new AbortController(); $('impLbl').classList.add('busy'); $('impStop').hidden = false; imsg('Reading your bet…');
+    try {
+      const data = await sampleFn.json(impPrompt(), { signal: impCtl.signal, modelTier: 'default', images: files });
+      if (data && Array.isArray(data.legs)) data.expected = 0;
+      applyImport(data);
+    } catch (err) {
+      const code = err && err.code;
+      if (code === 'cancelled') imsg('Stopped.');
+      else if (code === 'no_legs') imsg('Couldn\'t find a bet in that screenshot. Use the bet slip or the bet in My Bets, with the legs showing.', 'err');
+      else if (code === 'no_match') imsg('None of the legs matched games on Leg Room\'s slate' + (err.missed && err.missed.length ? ': ' + err.missed.map(esc).join('; ') : '') + '.', 'err');
+      else if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed', 'images_unavailable'].includes(code)) { $('impBox').hidden = true; }
+      else imsg(esc(FILL_ERR[code] || 'Something went wrong reading that. Try again.'), 'err');
+    } finally { $('impLbl').classList.remove('busy'); $('impStop').hidden = true; impCtl = null; }
+  });
+  $('impStop').addEventListener('click', () => { if (impCtl) impCtl.abort(); });
 
   // ---- private store ----
   // ---- live scores (through the sports data connector, refreshed about every minute) ----
@@ -3007,7 +3245,7 @@ h1 .stop, .mb-title .stop { color: var(--accent); }
   renderAll();
   renderTrack();
   if (window.__LR_TEST_SCORES) onScores(window.__LR_TEST_SCORES);
-  try { if (/debug/.test(location.search)) window.__LR = { auto: () => AUTO, role: recentRole, fat: fatigueOf, games: gamesList, sim: simulate, joint, rate, evalLeg, parseSummary, rbox: resultBox, eid: espnId, results: () => RESULTS }; } catch (e) {}
+  try { if (/debug/.test(location.search)) window.__LR = { auto: () => AUTO, role: recentRole, fat: fatigueOf, games: gamesList, sim: simulate, joint, rate, evalLeg, parseSummary, rbox: resultBox, eid: espnId, results: () => RESULTS, simulate, joint, parseSlip, applyImport, ocrLines }; } catch (e) {}
   $('ltRefresh').addEventListener('click', () => { LT.box = {}; pollTracker(); });
   $('trackBtn').addEventListener('click', trackSlip);
   $('ltPanel').addEventListener('click', e => {
